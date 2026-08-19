@@ -1,0 +1,48 @@
+# ============================================================
+#  ARAMS 2.0 — repository ignore rules
+# ============================================================
+
+# ── Real database dumps — NEVER commit ──────────────────────
+# The populated dump contains real UTHM staff names, email
+# addresses, phone numbers and bcrypt password hashes.
+# Only the sanitised structure-only schema is tracked, at
+# database/arams_uthm_schema.sql
+arams_uthm.sql
+*.sql
+!database/arams_uthm_schema.sql
+*.sql.bak
+*.dump
+
+# ── Secrets ─────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+config/mail.php
+config/db.local.php
+config/database.local.php
+
+# ── User-uploaded content (contains real people's photos) ───
+uploads/
+assets/images/profiles/*
+!assets/images/profiles/.gitkeep
+
+# ── Dependencies & build output ─────────────────────────────
+/vendor/
+/node_modules/
+/public/build/
+/public/hot
+/storage/*.key
+
+# ── Logs & local debug ──────────────────────────────────────
+*.log
+error_log
+debug.php
+
+# ── Editor / OS ─────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
