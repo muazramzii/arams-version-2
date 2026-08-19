@@ -1,0 +1,37 @@
+# Uploads & user-generated files
+uploads/*
+!uploads/.gitkeep
+assets/images/profiles/*
+!assets/images/profiles/.gitkeep
+
+# Local debug
+debug.php
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+error_log
+
+# Local environment overrides
+config/db.local.php
+config/database.local.php
+.env
+.env.local
+
+# Database dumps (commit a sanitized schema separately if needed)
+*.sql.bak
+*.dump
+
+# Secrets — SMTP App Password (use config/mail.example.php as template)
+config/mail.php
+
+# One-off / temporary scripts
+test_mail.php

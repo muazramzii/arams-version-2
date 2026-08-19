@@ -1,0 +1,1064 @@
+<title>ARAMS 2.0 Data Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:ital,wght@0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root{
+  --paper:#F4F6F7; --surface:#FFFFFF; --surface-2:#EDF1F2;
+  --ink:#12212E; --ink-2:#3C4C58; --ink-3:#6B7B87;
+  --rule:#D3DBDF; --rule-strong:#AFBDC4;
+  --accent:#0E5A6B; --accent-soft:#DCEAED;
+  --crit:#9B2C2C; --crit-soft:#F6E3E3;
+  --warn:#8A5A00; --warn-soft:#F7EDD8;
+  --good:#1F6B4A; --good-soft:#DDEDE4;
+  --info:#3A4E8C; --info-soft:#E3E7F4;
+  --shadow:0 1px 2px rgba(18,33,46,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E1A22; --surface:#152530; --surface-2:#1B2F3B;
+    --ink:#E6EDF0; --ink-2:#B3C3CC; --ink-3:#8296A1;
+    --rule:#28414F; --rule-strong:#3D5A6B;
+    --accent:#59B6C6; --accent-soft:#16333B;
+    --crit:#E28B8B; --crit-soft:#331C1C;
+    --warn:#D9AC5C; --warn-soft:#33280F;
+    --good:#77C6A0; --good-soft:#14301F;
+    --info:#9AAAE0; --info-soft:#1B2340;
+    --shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E1A22; --surface:#152530; --surface-2:#1B2F3B;
+  --ink:#E6EDF0; --ink-2:#B3C3CC; --ink-3:#8296A1;
+  --rule:#28414F; --rule-strong:#3D5A6B;
+  --accent:#59B6C6; --accent-soft:#16333B;
+  --crit:#E28B8B; --crit-soft:#331C1C;
+  --warn:#D9AC5C; --warn-soft:#33280F;
+  --good:#77C6A0; --good-soft:#14301F;
+  --info:#9AAAE0; --info-soft:#1B2340;
+  --shadow:0 1px 2px rgba(0,0,0,.3);
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:15px;line-height:1.62;-webkit-font-smoothing:antialiased}
+
+.shell{max-width:1240px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:224px minmax(0,1fr);gap:56px;align-items:start}
+@media (max-width:1000px){.shell{grid-template-columns:minmax(0,1fr);gap:0}}
+
+nav.toc{position:sticky;top:0;max-height:100vh;overflow-y:auto;padding:36px 0 48px;font-size:12.5px;line-height:1.45}
+@media (max-width:1000px){nav.toc{position:static;max-height:none;border-bottom:1px solid var(--rule);margin-bottom:8px}}
+nav.toc .toc-head{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 12px}
+nav.toc ol{list-style:none;margin:0 0 16px;padding:0;display:flex;flex-direction:column;gap:1px}
+nav.toc a{display:flex;gap:8px;text-decoration:none;color:var(--ink-2);padding:3px 6px 3px 8px;border-left:2px solid transparent}
+nav.toc a:hover{color:var(--accent);border-left-color:var(--accent)}
+nav.toc a .lt{font-family:"IBM Plex Mono",monospace;color:var(--ink-3);flex:0 0 18px;font-variant-numeric:tabular-nums}
+nav.toc .grp{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:16px 0 6px;padding-left:8px}
+
+main{padding:36px 0 120px;min-width:0}
+
+header.mast{border-bottom:2px solid var(--ink);padding-bottom:22px;margin-bottom:34px}
+.mast .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+.mast h1{font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;font-size:clamp(30px,4.2vw,44px);line-height:1.1;margin:0 0 12px;text-wrap:balance;letter-spacing:-.01em}
+.mast .dek{font-size:16px;color:var(--ink-2);max-width:62ch;margin:0 0 20px}
+.mast dl{display:flex;flex-wrap:wrap;gap:0 34px;margin:0;font-size:12.5px}
+.mast dl div{display:flex;flex-direction:column;gap:1px}
+.mast dt{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.mast dd{margin:0;color:var(--ink);font-weight:500}
+
+h2{font-family:"IBM Plex Serif",Georgia,serif;font-weight:600;font-size:25px;line-height:1.2;margin:0;text-wrap:balance;letter-spacing:-.005em}
+h3{font-weight:600;font-size:16.5px;margin:30px 0 8px;text-wrap:balance}
+h4{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);margin:24px 0 8px}
+p{margin:0 0 14px;max-width:74ch}
+ul,ol{margin:0 0 14px;padding-left:20px;max-width:74ch}
+li{margin-bottom:5px}
+li::marker{color:var(--ink-3)}
+a{color:var(--accent)}
+code{font-family:"IBM Plex Mono",monospace;font-size:.87em;background:var(--surface-2);padding:1px 5px;border-radius:2px}
+
+section.sec{margin:0 0 52px;scroll-margin-top:20px}
+.sec-head{display:flex;gap:14px;align-items:baseline;border-bottom:1px solid var(--rule-strong);padding-bottom:9px;margin-bottom:18px}
+.sec-head .lt{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500;color:var(--accent);background:var(--accent-soft);border-radius:2px;padding:2px 7px;flex:0 0 auto;line-height:1.4}
+.sec-sub{color:var(--ink-3);font-size:13px;margin:-2px 0 18px;max-width:74ch}
+
+.part-rule{display:flex;align-items:center;gap:14px;margin:64px 0 30px}
+.part-rule:first-of-type{margin-top:0}
+.part-rule span{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
+.part-rule::after{content:"";flex:1;height:2px;background:var(--ink)}
+
+.find{border:1px solid var(--rule);border-top:2px solid var(--rule-strong);background:var(--surface);padding:14px 16px;margin:0 0 12px;box-shadow:var(--shadow)}
+.find.crit{border-top-color:var(--crit)}
+.find.warn{border-top-color:var(--warn)}
+.find.good{border-top-color:var(--good)}
+.find.info{border-top-color:var(--info)}
+.find-hd{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-bottom:6px}
+.find-hd .t{font-weight:600;font-size:14.5px;flex:1 1 300px;min-width:0}
+.find p{margin:0 0 8px;font-size:14px;max-width:none}
+.find p:last-child{margin-bottom:0}
+.find ul,.find ol{font-size:14px;max-width:none;margin-bottom:8px}
+
+.chip{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;padding:2px 6px;border-radius:2px;white-space:nowrap;font-weight:500}
+.chip.crit{background:var(--crit-soft);color:var(--crit)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.good{background:var(--good-soft);color:var(--good)}
+.chip.info{background:var(--info-soft);color:var(--info)}
+.chip.plain{background:var(--surface-2);color:var(--ink-3)}
+
+.ev{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink-3);background:var(--surface-2);border-left:2px solid var(--rule-strong);padding:6px 10px;margin:8px 0 0;overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+
+.callout{border:1px solid var(--rule);background:var(--surface);padding:16px 18px;margin:0 0 20px}
+.callout.decide{border-color:var(--warn);background:var(--warn-soft)}
+.callout.lock{border-color:var(--accent);background:var(--accent-soft)}
+.callout .co-hd{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;font-weight:500;margin-bottom:8px}
+.callout.decide .co-hd{color:var(--warn)}
+.callout.lock .co-hd{color:var(--accent)}
+.callout p,.callout ul,.callout ol{max-width:none;font-size:14px}
+.callout p:last-child,.callout ul:last-child,.callout ol:last-child{margin-bottom:0}
+
+.tw{overflow-x:auto;margin:0 0 20px;border:1px solid var(--rule);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:560px}
+th,td{text-align:left;padding:7px 11px;border-bottom:1px solid var(--rule);vertical-align:top}
+thead th{background:var(--surface-2);font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-2);font-weight:500;white-space:nowrap;border-bottom:1px solid var(--rule-strong)}
+tbody tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex Mono",monospace}
+td code{background:transparent;padding:0;font-size:12px}
+td.mono,th.mono{font-family:"IBM Plex Mono",monospace;font-size:12px;white-space:nowrap}
+.tick{color:var(--good);font-weight:600}
+.cross{color:var(--crit);font-weight:600}
+.dash{color:var(--ink-3)}
+caption{caption-side:top;text-align:left;font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);padding:9px 11px 5px;background:var(--surface)}
+
+pre.mermaid{background:var(--surface);border:1px solid var(--rule);padding:18px;margin:0 0 20px;overflow-x:auto;text-align:center}
+
+.tree{font-family:"IBM Plex Mono",monospace;font-size:12px;line-height:1.65;background:var(--surface);border:1px solid var(--rule);padding:14px 16px;margin:0 0 20px;overflow-x:auto;white-space:pre;color:var(--ink-2)}
+.tree b{color:var(--ink);font-weight:500}
+
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);margin:0 0 22px}
+.stat{background:var(--surface);padding:11px 13px}
+.stat .v{font-family:"IBM Plex Mono",monospace;font-size:21px;font-weight:500;line-height:1.15;font-variant-numeric:tabular-nums}
+.stat .k{font-size:11px;color:var(--ink-3);margin-top:2px;line-height:1.3}
+.stat.is-crit .v{color:var(--crit)}
+.stat.is-warn .v{color:var(--warn)}
+.stat.is-acc .v{color:var(--accent)}
+
+footer.end{border-top:2px solid var(--ink);margin-top:60px;padding-top:18px;font-size:12.5px;color:var(--ink-3)}
+footer.end p{max-width:74ch}
+
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="shell">
+
+<nav class="toc" aria-label="Contents">
+  <p class="toc-head">Contents</p>
+  <p class="grp">Before we build</p>
+  <ol>
+    <li><a href="#gate"><span class="lt">§</span><span>Two blockers found</span></a></li>
+    <li><a href="#principles"><span class="lt">§</span><span>Design principles</span></a></li>
+  </ol>
+  <p class="grp">Model</p>
+  <ol>
+    <li><a href="#s1"><span class="lt">1</span><span>Domain model</span></a></li>
+    <li><a href="#s2"><span class="lt">2</span><span>Entity model</span></a></li>
+    <li><a href="#s3"><span class="lt">3</span><span>Identity &amp; organisation</span></a></li>
+    <li><a href="#s4"><span class="lt">4</span><span>Historical attribution</span></a></li>
+    <li><a href="#s5"><span class="lt">5</span><span>Research architecture</span></a></li>
+    <li><a href="#s6"><span class="lt">6</span><span>Research subtypes</span></a></li>
+    <li><a href="#s7"><span class="lt">7</span><span>Submission &amp; validation</span></a></li>
+    <li><a href="#s8"><span class="lt">8</span><span>H-Index snapshots</span></a></li>
+    <li><a href="#s9"><span class="lt">9</span><span>KPI architecture</span></a></li>
+    <li><a href="#s10"><span class="lt">10</span><span>Audit</span></a></li>
+    <li><a href="#s11"><span class="lt">11</span><span>Notification</span></a></li>
+    <li><a href="#s12"><span class="lt">12</span><span>Reference data</span></a></li>
+    <li><a href="#s13"><span class="lt">13</span><span>Reporting</span></a></li>
+  </ol>
+  <p class="grp">Rigour</p>
+  <ol>
+    <li><a href="#s14"><span class="lt">14</span><span>Soft delete</span></a></li>
+    <li><a href="#s15"><span class="lt">15</span><span>Cardinality</span></a></li>
+    <li><a href="#s16"><span class="lt">16</span><span>Keys &amp; constraints</span></a></li>
+    <li><a href="#s17"><span class="lt">17</span><span>Index plan</span></a></li>
+    <li><a href="#s18"><span class="lt">18</span><span>Normalization</span></a></li>
+    <li><a href="#s19"><span class="lt">19</span><span>Migration mapping</span></a></li>
+    <li><a href="#s20"><span class="lt">20</span><span>Open items</span></a></li>
+  </ol>
+</nav>
+
+<main>
+
+<header class="mast">
+  <p class="eyebrow">Phase 2 · Data Architecture</p>
+  <h1>ARAMS 2.0 Data Architecture</h1>
+  <p class="dek">The complete domain and entity model for ARAMS 2.0, designed against locked decisions D1–D6 and validated line by line against the 1,130 rows of real UTHM data in the existing dump. Specification only — no migrations written.</p>
+  <dl>
+    <div><dt>Basis</dt><dd>D1–D6 locked</dd></div>
+    <div><dt>Tables</dt><dd>41 core · 21 reference</dd></div>
+    <div><dt>Validated against</dt><dd><code>arams_uthm.sql</code></dd></div>
+    <div><dt>Status</dt><dd>2 blockers · awaiting review</dd></div>
+  </dl>
+</header>
+
+<section class="sec" id="gate">
+  <div class="sec-head"><span class="lt">§</span><h2>Two blockers the data raises against the locked decisions</h2></div>
+  <p class="sec-sub">Neither makes a locked decision technically impossible, so I have designed around both rather than stopping. Both need your answer before Phase 3.</p>
+
+  <div class="find crit">
+    <div class="find-hd"><span class="chip crit">Blocker 1</span><span class="t">D1 leaves 77 lecturers with no one who can validate their work</span></div>
+    <p>D1 removes the Admin fallback. TDPP is now the only validator. I checked TDPP coverage against the lecturer population:</p>
+    <div class="ev">faculty   lecturers   TDPP   research records
+FKAAS         77        0        77      ←  no validator exists
+FSKTM          8        1        58
+FKMP           4        1        22
+FKAAB          4        1        64
+FPTV           3        1        40
+FKEE           2        1        17</div>
+    <p><strong>FKAAS is the largest faculty in the system by lecturer count and has no TDPP appointment.</strong> Under D1 as written, any submission from those 77 accounts enters a queue nobody can act on. It does not bite today only because all 77 are inactive shell accounts — the moment faculty IT activates them, 77 lecturers are stranded.</p>
+    <p><strong>This is an appointment gap, not an architecture flaw</strong>, and the fix is administrative: appoint a TDPP for FKAAS. But the architecture must make the gap impossible to miss rather than silently swallowing submissions, so the model does three things:</p>
+    <ul>
+      <li>TDPP becomes a dated <em>appointment</em> (<code>faculty_leaders</code>), not a profile row. A faculty with no active appointment is a queryable state, not an absence.</li>
+      <li>A faculty may hold more than one concurrent TDPP appointment — deputies, or cover during leave — so a single person is never a single point of failure.</li>
+      <li>Submission is refused at the point of submission, with a clear message, if the lecturer's faculty has no active validator. Better a lecturer is told immediately than a record sits unreviewed for months.</li>
+    </ul>
+    <p><strong>Needed from you:</strong> confirm that refusing submission is the right behaviour, and that FKAAS will receive a TDPP appointment before those accounts are activated. I have <em>not</em> introduced an Admin fallback — D1 is respected.</p>
+  </div>
+
+  <div class="find crit">
+    <div class="find-hd"><span class="chip crit">Blocker 2</span><span class="t">D4 needs an effective date that 88 existing records do not have</span></div>
+    <p>D4 makes the record's own effective date the basis for KPI credit. That requires every research record to have one. Checking availability across the real data:</p>
+    <div class="ev">entity            rows   usable effective date
+publication        107   107  ✓   pub_year
+research income     72    72  ✓   year_received
+award               31    31  ✓   award_year
+h-index             87    87  ✓   record_year   (metric, not research — see D2)
+grant               71     1  ✗   70 have NULL start_date
+IP record           18     0  ✗   filing_date AND grant_date are both 100% NULL</div>
+    <p>Every IP record in the system has no date of any kind, and 70 of 71 grants have no start date. Under a strict <code>NOT NULL effective_date</code>, 88 records cannot be migrated at all.</p>
+    <p><strong>Design accommodation.</strong> <code>research_records</code> carries <code>effective_date</code> as <code>NULL</code>-able alongside a mandatory <code>effective_date_precision</code> of <code>DAY</code>, <code>MONTH</code>, <code>YEAR</code>, or <code>UNKNOWN</code>. A record with precision <code>UNKNOWN</code> is valid, visible, and counted in totals — but it is <strong>excluded from every period-scoped KPI calculation and every time-series chart</strong>, and it appears in an Admin "records needing a date" worklist. Nothing is silently dropped and nothing is silently guessed.</p>
+    <p>New records submitted through ARAMS 2.0 require a real date; <code>UNKNOWN</code> is reachable only by migration.</p>
+    <p><strong>Needed from you:</strong> confirm this, and confirm that backfilling the 70 grant start dates and 18 IP filing dates from UTHM records is owned by the research office. Until that lands, grant and IP KPI targets cannot be scored.</p>
+  </div>
+
+  <div class="callout lock">
+    <p class="co-hd">Everything else in D1–D6 holds cleanly</p>
+    <p><strong>D2</strong> — H-Index leaves the workflow entirely; 87 rows become metric snapshots and 87 no-op approvals disappear. <strong>D3</strong> — the 67 bundled submissions split deterministically; one-to-one is enforced by a UNIQUE constraint, not by convention. <strong>D5</strong> — benchmarking is a separate read model with a minimum-cohort rule. <strong>D6</strong> — adding a research type is one reference row plus one subtype table, with no change to submissions, KPI, audit, or analytics.</p>
+    <p>One D5 detail worth flagging early: with only six faculties holding data, an "institution median" computed from a cohort of two or three is re-identifiable — a TDPP could infer another faculty's exact figure. Section <a href="#s5">5</a> handles this with a minimum-cohort threshold.</p>
+  </div>
+</section>
+
+<section class="sec" id="principles">
+  <div class="sec-head"><span class="lt">§</span><h2>Design principles</h2></div>
+
+  <ol>
+    <li><strong>Every entity earns its place.</strong> No table exists because a screen exists. Each one below is justified by a business fact, a locked decision, or a defect in the current data.</li>
+    <li><strong>Integrity is structural, not procedural.</strong> Where 1.0 relied on the application remembering a rule, 2.0 uses a constraint. The empty-string ENUM corruption, the duplicate grant codes, and the one-to-many submission bundling are all fixed by constraints rather than by discipline.</li>
+    <li><strong>Vocabularies are data with foreign keys.</strong> The <code>University</code>/<code>Universiti</code> split and the 52 blank <code>report_type</code> values both trace to vocabularies living in JavaScript. Reference tables with FKs make those states unrepresentable.</li>
+    <li><strong>Workflow state and domain data stay apart.</strong> A research record is a fact. A submission is a process about that fact. They are different tables with different lifetimes.</li>
+    <li><strong>History is append-only.</strong> Reviews, affiliations, appointments, and audit events are never updated in place. Current state is derived from history, not substituted for it.</li>
+    <li><strong>Denormalize only deliberately, and say so.</strong> Three denormalizations appear below. Each is named, justified, and given a reconciliation job.</li>
+    <li><strong>MySQL 8 in strict mode, InnoDB, <code>utf8mb4_0900_ai_ci</code>.</strong> Non-negotiable — non-strict mode is what turned invalid values into blanks.</li>
+    <li><strong>Surrogate <code>BIGINT UNSIGNED</code> primary keys throughout</strong>, with natural keys enforced as UNIQUE alongside. Business identifiers change; primary keys must not.</li>
+  </ol>
+</section>
+
+<!-- ================= MODEL ================= -->
+<div class="part-rule"><span>Model</span></div>
+
+<section class="sec" id="s1">
+  <div class="sec-head"><span class="lt">1</span><h2>Domain model</h2></div>
+  <p class="sec-sub">Ten bounded contexts. The dependency direction matters: nothing upstream may depend on anything downstream.</p>
+
+  <pre class="mermaid">flowchart TB
+  REF["Reference<br/><i>controlled vocabularies</i>"]
+  IAM["Identity &amp; Access<br/><i>users, roles, sessions</i>"]
+  ORG["Organisation<br/><i>faculties, staff, affiliations, appointments</i>"]
+  RES["Research<br/><i>records, contributors, 5 subtypes</i>"]
+  SUB["Submission &amp; Validation<br/><i>state machine, reviews, revisions</i>"]
+  MET["Metrics<br/><i>H-Index snapshots</i>"]
+  KPI["KPI<br/><i>periods, measures, targets, progress</i>"]
+  ANL["Analytics<br/><i>read models, benchmarking</i>"]
+  RPT["Reporting<br/><i>definitions, runs, artifacts</i>"]
+  AUD["Audit &amp; Notification<br/><i>events, messages</i>"]
+
+  REF --> ORG
+  REF --> RES
+  IAM --> ORG
+  ORG --> RES
+  ORG --> MET
+  RES --> SUB
+  SUB --> KPI
+  MET --> KPI
+  RES --> ANL
+  KPI --> ANL
+  ANL --> RPT
+  SUB -.emits.-> AUD
+  KPI -.emits.-> AUD
+  ORG -.emits.-> AUD</pre>
+
+  <p>Two structural consequences of the locked decisions are visible here. <strong>Metrics sits beside Research, not inside it</strong> — that is D2 made structural, and it is why H-Index bypasses Submission entirely while still feeding KPI. And <strong>KPI draws from two sources</strong>, validated research records and authoritative metric snapshots, which is what lets an institutional "average H-Index" target survive D2.</p>
+</section>
+
+<section class="sec" id="s2">
+  <div class="sec-head"><span class="lt">2</span><h2>Entity model</h2></div>
+  <p class="sec-sub">41 core tables and 21 reference tables. Reference tables are summarised in section 12 rather than listed individually.</p>
+
+  <div class="stat-row">
+    <div class="stat is-acc"><div class="v">41</div><div class="k">Core tables</div></div>
+    <div class="stat"><div class="v">21</div><div class="k">Reference tables</div></div>
+    <div class="stat"><div class="v">20</div><div class="k">Replaced from 1.0</div></div>
+    <div class="stat is-acc"><div class="v">3</div><div class="k">Deliberate denormalizations</div></div>
+  </div>
+
+  <div class="tw">
+    <table>
+      <caption>Core entity inventory</caption>
+      <thead><tr><th>Context</th><th>Tables</th><th class="num">n</th></tr></thead>
+      <tbody>
+        <tr><td>Identity &amp; Access</td><td class="mono">users · password_reset_codes · login_attempts · personal_access_tokens</td><td class="num">4</td></tr>
+        <tr><td>Organisation</td><td class="mono">faculties · departments · research_groups · staff_profiles · staff_external_ids · staff_affiliations · faculty_leaders</td><td class="num">7</td></tr>
+        <tr><td>Research</td><td class="mono">research_records · publications · publication_authors · publication_indexings · grant_projects · grants · ip_records · ip_inventors · research_incomes · awards</td><td class="num">10</td></tr>
+        <tr><td>Submission</td><td class="mono">submissions · submission_revisions · submission_reviews · submission_transitions</td><td class="num">4</td></tr>
+        <tr><td>Metrics</td><td class="mono">hindex_snapshots</td><td class="num">1</td></tr>
+        <tr><td>KPI</td><td class="mono">kpi_periods · kpi_measures · kpi_targets · kpi_target_criteria · kpi_assignments · kpi_progress · kpi_contributions</td><td class="num">7</td></tr>
+        <tr><td>Reporting</td><td class="mono">report_definitions · report_runs</td><td class="num">2</td></tr>
+        <tr><td>Audit</td><td class="mono">audit_events</td><td class="num">1</td></tr>
+        <tr><td>Notification</td><td class="mono">notifications · notification_preferences</td><td class="num">2</td></tr>
+        <tr><td>Analytics</td><td class="mono">analytics_faculty_period · analytics_staff_period · benchmark_cohorts</td><td class="num">3</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="sec" id="s3">
+  <div class="sec-head"><span class="lt">3</span><h2>Identity and organisation</h2></div>
+
+  <pre class="mermaid">erDiagram
+  users ||--|| staff_profiles : "1:1"
+  staff_profiles ||--o{ staff_external_ids : has
+  staff_profiles ||--o{ staff_affiliations : "over time"
+  staff_profiles ||--o{ faculty_leaders : "appointed as"
+  faculties ||--o{ departments : contains
+  faculties ||--o{ staff_affiliations : hosts
+  faculties ||--o{ faculty_leaders : "led by"
+  faculties ||--o{ research_groups : owns
+  departments ||--o{ staff_affiliations : "sub-unit of"
+  research_groups ||--o{ staff_affiliations : "member of"</pre>
+
+  <h3>3.1 · One profile table, not three</h3>
+  <p>1.0 stored a person's name and contact details in <code>tbl_lecturer</code>, <code>tbl_tdpp</code>, or <code>tbl_admin</code> depending on their role. That is why a TDPP cannot have a profile page, why <code>api/update_user.php</code> blindly writes to two tables and misses the third, and why the same attribute exists three times.</p>
+  <p><code>staff_profiles</code> holds every person once. Role stays on <code>users</code>. The data confirms this is safe: all five TDPP accounts have <code>role = 'TDPP'</code> and no lecturer profile, so the merge is a straight union with no collisions.</p>
+
+  <div class="tw">
+    <table>
+      <caption>staff_profiles</caption>
+      <thead><tr><th class="mono">Column</th><th class="mono">Type</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">id</td><td class="mono">BIGINT UNSIGNED PK</td><td></td></tr>
+        <tr><td class="mono">user_id</td><td class="mono">BIGINT UNSIGNED</td><td>UNIQUE, FK → users, ON DELETE RESTRICT</td></tr>
+        <tr><td class="mono">staff_no</td><td class="mono">VARCHAR(20)</td><td>UNIQUE. Needs format cleanup — 4 incompatible shapes today</td></tr>
+        <tr><td class="mono">full_name</td><td class="mono">VARCHAR(150)</td><td>NOT NULL</td></tr>
+        <tr><td class="mono">title</td><td class="mono">VARCHAR(50)</td><td>Dr., Prof., Ts.</td></tr>
+        <tr><td class="mono">position_id</td><td class="mono">BIGINT UNSIGNED</td><td>FK → positions. Was free text with EN/MS duplicates</td></tr>
+        <tr><td class="mono">grade_id</td><td class="mono">BIGINT UNSIGNED</td><td>FK → grades (JPA grade)</td></tr>
+        <tr><td class="mono">researcher_status_id</td><td class="mono">BIGINT UNSIGNED</td><td>FK → researcher_statuses</td></tr>
+        <tr><td class="mono">phone</td><td class="mono">VARCHAR(30)</td><td>NULL — 89 of 98 empty today</td></tr>
+        <tr><td class="mono">specialisation</td><td class="mono">VARCHAR(200)</td><td>NULL</td></tr>
+        <tr><td class="mono">managerial_position</td><td class="mono">BOOLEAN</td><td>DEFAULT FALSE</td></tr>
+        <tr><td class="mono">profile_photo_path</td><td class="mono">VARCHAR(255)</td><td>Stored outside web root, served by controller</td></tr>
+        <tr><td class="mono">cv_url</td><td class="mono">VARCHAR(255)</td><td></td></tr>
+        <tr><td class="mono">created_at / updated_at</td><td class="mono">TIMESTAMP</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>Removed from the 1.0 lecturer table:</strong> <code>faculty_id</code>, <code>department</code>, <code>research_group_id</code>, and <code>research_centre</code> all move to <code>staff_affiliations</code>, because they change over time and the change is exactly what 1.0 failed to record. <code>research_group_category</code> is dropped — it duplicated and contradicted <code>research_group_id</code> in 63 rows. The five external-ID columns move to <code>staff_external_ids</code>.</p>
+
+  <h3>3.2 · External researcher IDs</h3>
+  <p><code>staff_external_ids</code>: <code>id</code>, <code>staff_profile_id</code>, <code>provider_id</code> (FK → <code>external_id_providers</code>: Scopus, ORCID, ResearcherID, Lens, Google Scholar), <code>value</code>, <code>verified_at</code>. UNIQUE on <code>(staff_profile_id, provider_id)</code> and on <code>(provider_id, value)</code> — the second one catches two staff claiming the same ORCID, which is a real data-quality risk at scale.</p>
+  <p>Justification: 1.0 hardcoded five providers as five columns. Adding Web of Science or Publons meant a schema change. This is a genuine one-to-many.</p>
+
+  <h3>3.3 · TDPP as an appointment</h3>
+  <p>This replaces <code>tbl_tdpp</code> and is the structural answer to Blocker 1.</p>
+
+  <div class="tw">
+    <table>
+      <caption>faculty_leaders</caption>
+      <thead><tr><th class="mono">Column</th><th class="mono">Type</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">id</td><td class="mono">BIGINT UNSIGNED PK</td><td></td></tr>
+        <tr><td class="mono">faculty_id</td><td class="mono">BIGINT UNSIGNED</td><td>FK → faculties, RESTRICT</td></tr>
+        <tr><td class="mono">staff_profile_id</td><td class="mono">BIGINT UNSIGNED</td><td>FK → staff_profiles, RESTRICT</td></tr>
+        <tr><td class="mono">appointment</td><td class="mono">ENUM('TDPP')</td><td>Enum, extensible by migration if UTHM adds another validating role</td></tr>
+        <tr><td class="mono">valid_from</td><td class="mono">DATE</td><td>NOT NULL</td></tr>
+        <tr><td class="mono">valid_to</td><td class="mono">DATE</td><td>NULL = currently serving</td></tr>
+        <tr><td class="mono">appointed_by</td><td class="mono">BIGINT UNSIGNED</td><td>FK → users (Admin)</td></tr>
+        <tr><td class="mono">note</td><td class="mono">VARCHAR(255)</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>What this buys: a faculty can have two concurrent TDPPs, an outgoing TDPP's past decisions remain explicable, and <em>"which faculties currently have no validator"</em> becomes a one-line query that an Admin dashboard can surface as a standing warning. Under 1.0 that question had no answer.</p>
+  <p><strong>Constraint:</strong> no two overlapping open appointments for the same <code>(faculty_id, staff_profile_id)</code> pair — enforced in the application, since MySQL lacks exclusion constraints.</p>
+</section>
+
+<section class="sec" id="s4">
+  <div class="sec-head"><span class="lt">4</span><h2>Historical attribution</h2></div>
+  <p class="sec-sub">The fix for the defect that moved 37 of Rozlini's records from FSKTM to FKAAB when she transferred.</p>
+
+  <div class="tw">
+    <table>
+      <caption>staff_affiliations — effective-dated membership</caption>
+      <thead><tr><th class="mono">Column</th><th class="mono">Type</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">id</td><td class="mono">BIGINT UNSIGNED PK</td><td></td></tr>
+        <tr><td class="mono">staff_profile_id</td><td class="mono">BIGINT UNSIGNED</td><td>FK → staff_profiles, CASCADE</td></tr>
+        <tr><td class="mono">faculty_id</td><td class="mono">BIGINT UNSIGNED</td><td>FK → faculties, RESTRICT</td></tr>
+        <tr><td class="mono">department_id</td><td class="mono">BIGINT UNSIGNED</td><td>NULL, FK → departments</td></tr>
+        <tr><td class="mono">research_group_id</td><td class="mono">BIGINT UNSIGNED</td><td>NULL, FK → research_groups</td></tr>
+        <tr><td class="mono">valid_from</td><td class="mono">DATE</td><td>NOT NULL</td></tr>
+        <tr><td class="mono">valid_to</td><td class="mono">DATE</td><td>NULL = current</td></tr>
+        <tr><td class="mono">is_primary</td><td class="mono">BOOLEAN</td><td>Joint appointments — one primary at a time</td></tr>
+        <tr><td class="mono">transfer_reason</td><td class="mono">VARCHAR(255)</td><td></td></tr>
+        <tr><td class="mono">recorded_by</td><td class="mono">BIGINT UNSIGNED</td><td>FK → users</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>4.1 · The attribution rule</h3>
+  <p>Two different questions need two different answers, and 1.0 conflated them:</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Question</th><th>Resolved from</th><th>Changes on transfer?</th></tr></thead>
+      <tbody>
+        <tr><td>Which faculty does this lecturer belong to <em>now</em>?</td><td>Open <code>staff_affiliations</code> row</td><td class="tick">Yes — correctly</td></tr>
+        <tr><td>Which faculty gets credit for this 2020 publication?</td><td><code>research_records.attributed_faculty_id</code>, frozen at approval</td><td class="cross">No — correctly</td></tr>
+        <tr><td>Which TDPP reviews this submission?</td><td>Affiliation at submission time</td><td>Follows the lecturer</td></tr>
+        <tr><td>Which faculty's queue does a pending item sit in?</td><td><code>submissions.faculty_id_at_submission</code></td><td>Frozen at submission</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>Attribution is computed once and frozen.</strong> When a submission reaches <code>APPROVED</code>, the system resolves the lecturer's primary affiliation as at the record's <code>effective_date</code> and writes it to <code>research_records.attributed_faculty_id</code>, with <code>attributed_at</code> and <code>attribution_basis</code> alongside.</p>
+
+  <div class="callout">
+    <p class="co-hd">Denormalization 1 of 3 — and why it is right</p>
+    <p><code>attributed_faculty_id</code> is derivable from affiliations plus <code>effective_date</code>, so storing it violates 3NF. I am doing it deliberately for three reasons: a published report saying <em>"FSKTM produced 37 publications in 2020"</em> must not silently change because someone later corrects an affiliation record; recomputing attribution across a five-way join on every analytics query is the wrong cost; and freezing it makes attribution auditable — you can see what was decided and when.</p>
+    <p><strong>Mitigation:</strong> a nightly reconciliation job recomputes expected attribution and reports divergence to Admin rather than silently correcting it. Divergence is a signal that someone edited history, which is exactly what an Admin should be told about.</p>
+    <p><strong>Records with <code>effective_date_precision = 'UNKNOWN'</code></strong> — the 88 grants and IP records — fall back to the affiliation at submission date, flagged <code>attribution_basis = 'SUBMISSION_DATE_FALLBACK'</code> so the approximation is visible rather than assumed.</p>
+  </div>
+
+  <p><strong>Migration:</strong> one open affiliation row per lecturer from today's <code>faculty_id</code>, then the four <code>tbl_faculty_transfer</code> rows replayed in timestamp order to close and open the intervening rows. Rozlini's 37 records recover <code>attributed_faculty_id = 1</code> (FSKTM) from the old snapshot column that nothing ever read.</p>
+</section>
+
+<section class="sec" id="s5">
+  <div class="sec-head"><span class="lt">5</span><h2>Research record architecture</h2></div>
+  <p class="sec-sub">The central structural decision, serving D3 and D6 together.</p>
+
+  <h3>5.1 · Supertype and subtypes</h3>
+  <p>Every research record is a row in <code>research_records</code> plus exactly one row in a subtype table. This is class-table inheritance, and it is what makes one-to-one submissions enforceable and new research types cheap.</p>
+
+  <pre class="mermaid">erDiagram
+  research_types ||--o{ research_records : classifies
+  staff_profiles ||--o{ research_records : owns
+  faculties ||--o{ research_records : "attributed to"
+  research_records ||--|| publications : "is a"
+  research_records ||--|| grants : "is a"
+  research_records ||--|| ip_records : "is a"
+  research_records ||--|| research_incomes : "is a"
+  research_records ||--|| awards : "is a"
+  research_records ||--|| submissions : "validated by"
+  publications ||--o{ publication_authors : credits
+  publications ||--o{ publication_indexings : "indexed in"
+  ip_records ||--o{ ip_inventors : credits
+  grant_projects ||--o{ grants : "participated in"
+  grant_projects ||--o{ research_incomes : funds</pre>
+
+  <div class="callout decide">
+    <p class="co-hd">"Isn't this just tbl_research_data again?"</p>
+    <p>It is a fair challenge, since Phase 1 recommended removing that table. The difference is what the parent carries.</p>
+    <p><code>tbl_research_data</code> was a <strong>workflow</strong> row pretending to be a parent: it held status, remarks, reviewer, and soft-delete flags; it had no identity of its own; nothing queried it for ownership; and it permitted one-to-many children — which is how 67 bundles came to exist.</p>
+    <p><code>research_records</code> is a <strong>domain supertype</strong>: it holds only what is genuinely true of every research record — owner, type, title, effective date, attributed faculty, soft delete — and carries <strong>no workflow state at all</strong>. Workflow lives in <code>submissions</code>, which references it one-to-one through a UNIQUE constraint.</p>
+    <p>The practical payoff: KPI contributions, audit events, and notifications all reference one stable table instead of five polymorphic targets; <em>"all research owned by this lecturer"</em> is one indexed query instead of a five-way UNION; and the effective-date and attribution rules that D4 and historical attribution depend on are defined once rather than five times, which is precisely how they drifted in 1.0.</p>
+  </div>
+
+  <div class="tw">
+    <table>
+      <caption>research_records — the supertype</caption>
+      <thead><tr><th class="mono">Column</th><th class="mono">Type</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">id</td><td class="mono">BIGINT UNSIGNED PK</td><td></td></tr>
+        <tr><td class="mono">research_type_id</td><td class="mono">BIGINT UNSIGNED</td><td>FK → research_types, RESTRICT. <strong>D6 extension point</strong></td></tr>
+        <tr><td class="mono">owner_staff_profile_id</td><td class="mono">BIGINT UNSIGNED</td><td>FK → staff_profiles, RESTRICT. The lecturer claiming it</td></tr>
+        <tr><td class="mono">display_title</td><td class="mono">VARCHAR(500)</td><td>Denormalized from subtype for lists and queues — see below</td></tr>
+        <tr><td class="mono">effective_date</td><td class="mono">DATE</td><td>NULL only when precision = UNKNOWN</td></tr>
+        <tr><td class="mono">effective_date_precision</td><td class="mono">ENUM</td><td>DAY · MONTH · YEAR · UNKNOWN. NOT NULL. <strong>D4</strong></td></tr>
+        <tr><td class="mono">attributed_faculty_id</td><td class="mono">BIGINT UNSIGNED</td><td>NULL until approved. FK → faculties</td></tr>
+        <tr><td class="mono">attributed_at</td><td class="mono">DATETIME</td><td></td></tr>
+        <tr><td class="mono">attribution_basis</td><td class="mono">ENUM</td><td>EFFECTIVE_DATE · SUBMISSION_DATE_FALLBACK · MANUAL</td></tr>
+        <tr><td class="mono">deleted_at / deleted_by / deletion_reason</td><td class="mono">—</td><td>Soft delete, independent of workflow — see §14</td></tr>
+        <tr><td class="mono">created_at / updated_at</td><td class="mono">TIMESTAMP</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>Denormalization 2 of 3:</strong> <code>display_title</code> duplicates the subtype's title. Justified because every queue, list, notification, and audit line needs a label, and resolving it otherwise means a five-way LEFT JOIN on the hottest query in the system. Maintained by the service layer in the same transaction as the subtype write; a consistency check runs with the nightly reconciliation.</p>
+
+  <h3>5.2 · Adding a research type later — the D6 test</h3>
+  <p>The architecture must let Research Projects or Postgraduate Supervision be added without restructuring. Concretely, adding one requires:</p>
+  <ol>
+    <li>One row in <code>research_types</code>.</li>
+    <li>One subtype table with <code>research_record_id</code> as its primary key.</li>
+    <li>Reference rows for any new vocabulary.</li>
+    <li>One Form Request, one Resource, one form component.</li>
+  </ol>
+  <p><strong>Unchanged:</strong> submissions, the state machine, reviews, revisions, KPI targets and contributions, audit, notifications, soft delete, attribution, and every existing analytics query. That is the test D6 asks the architecture to pass.</p>
+
+  <h3>5.3 · Contributors</h3>
+  <p><code>publication_authors</code> and <code>ip_inventors</code> break the 1NF violation in the current comma-separated <code>authors</code> and <code>inventors</code> fields. Columns: <code>research_record_id</code>, <code>staff_profile_id</code> (NULL for external people), <code>person_name</code>, <code>author_order</code>, <code>is_corresponding</code>, <code>is_student</code>, <code>affiliation_text</code>. The original string is preserved verbatim in <code>publications.raw_authors</code> so nothing is lost in migration.</p>
+  <p>This is what makes internal co-authorship, correct fractional credit across faculties, and honest duplicate detection possible. Today every duplicate in the data belongs to a single lecturer, so the question has not yet arisen — it will the moment a second faculty is active.</p>
+
+  <h3>5.4 · Benchmarking and the small-cohort problem (D5)</h3>
+  <p><code>benchmark_cohorts</code> defines which comparisons a TDPP may see, with a <code>min_cohort_size</code> guard. With six faculties holding data, an "institution median" over a cohort of two lets a TDPP subtract their own figure and read the other faculty's exactly.</p>
+  <p><strong>Rule:</strong> a benchmark value is returned only when the cohort excluding the requester contains at least <strong>three</strong> faculties with non-zero data for that measure and period. Below that, the API returns a suppressed marker and the UI reads <em>"not enough faculties reporting to compare"</em>. Enforced in the analytics service, not in the frontend.</p>
+</section>
+
+<section class="sec" id="s6">
+  <div class="sec-head"><span class="lt">6</span><h2>Research subtypes</h2></div>
+
+  <h3>6.1 · Publications</h3>
+  <p><code>publications</code>: <code>research_record_id</code> (PK, FK, CASCADE), <code>journal_name</code>, <code>issn</code>, <code>pub_year</code>, <code>volume</code>, <code>issue</code>, <code>pages</code>, <code>publication_type_id</code>, <code>author_role_id</code>, <code>quartile</code>, <code>impact_factor</code>, <code>doi</code>, <code>url</code>, <code>country_id</code>, <code>student_author</code>, <code>national_collaboration</code>, <code>international_collaboration</code>, <code>industries_collaboration</code>, <code>raw_authors</code>.</p>
+  <p><strong><code>publication_indexings</code> replaces the SET column.</strong> This is not cosmetic — it is the structural fix for the KPI defect where <code>indexing_type = 'Scopus'</code> silently missed all four publications indexed <code>'Scopus,WoS'</code>. As a join table, "is indexed in Scopus" becomes an EXISTS, which cannot fail that way.</p>
+  <p><code>effective_date</code> derives from <code>pub_year</code> with precision <code>YEAR</code>. All 107 rows migrate cleanly.</p>
+
+  <h3>6.2 · Grants — project versus participation</h3>
+  <p>This is the second significant structural change, and the real data forces it. Grant <code>Q940</code> appears three times, once per participating lecturer; ten other codes appear twice. Under 1.0 these are three unrelated grants worth three times the money.</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Table</th><th>Represents</th><th>Key columns</th></tr></thead>
+      <tbody>
+        <tr><td><code>grant_projects</code></td><td>The institutional grant — one per award, shared</td><td><code>grant_code</code> UNIQUE, <code>title</code>, <code>funder_id</code>, <code>grant_category_id</code>, <code>grant_level_id</code>, <code>total_amount</code>, <code>start_date</code>, <code>end_date</code>, <code>status_id</code>, <code>mygrants_id</code></td></tr>
+        <tr><td><code>grants</code></td><td>One lecturer's participation — the research record that gets submitted</td><td><code>research_record_id</code> PK, <code>grant_project_id</code>, <code>grant_role_id</code> (PI / Co-I / Member), <code>allocated_amount</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>UNIQUE <code>(grant_project_id, research_record_id → owner)</code></strong> makes it impossible for one lecturer to claim the same grant twice, which is exactly the duplicate pattern in the data. Institutional funding totals sum <code>grant_projects.total_amount</code> and stop triple-counting; individual credit uses participation and role.</p>
+  <p>D3 is respected: each lecturer's participation is one research record and one submission, reviewed independently by their own faculty's TDPP — which is correct, since two participants may sit in different faculties.</p>
+  <p><strong>Migration risk:</strong> merging <code>Q940</code>'s three rows assumes they really are one grant. This must be verified against UTHM records before the merge, not after. Marked High in the migration plan.</p>
+
+  <h3>6.3 · Research income</h3>
+  <p><code>research_incomes</code>: <code>research_record_id</code> (PK), <code>grant_project_id</code> (NULL, FK — now pointing at the project rather than a participation), <code>income_category_id</code>, <code>source_name</code>, <code>amount</code> <code>DECIMAL(15,2)</code>, <code>currency</code> <code>CHAR(3)</code> DEFAULT <code>'MYR'</code>, <code>year_received</code>, <code>received_on</code> (NULL).</p>
+  <p>70 of 72 rows already link to a grant and none exceeds its parent's amount, so this relationship is sound and migrates directly. A CHECK constraint enforces <code>amount &gt; 0</code>. Effective date comes from <code>year_received</code>, precision <code>YEAR</code> — all 72 rows migrate cleanly.</p>
+
+  <h3>6.4 · IP records</h3>
+  <p><code>ip_records</code>: <code>research_record_id</code> (PK), <code>ip_type_id</code>, <code>ip_number</code>, <code>country_id</code>, <code>filing_date</code>, <code>grant_date</code>, <code>registration_status_id</code>, <code>raw_inventors</code>. UNIQUE on <code>ip_number</code> where not null.</p>
+  <p>Effective date prefers <code>filing_date</code>, falling back to <code>grant_date</code>. <strong>All 18 existing rows have neither</strong>, so all 18 migrate with precision <code>UNKNOWN</code> and land on the Admin backfill worklist. This is Blocker 2 in concrete form.</p>
+
+  <h3>6.5 · Awards</h3>
+  <p><code>awards</code>: <code>research_record_id</code> (PK), <code>award_type_id</code>, <code>organiser</code>, <code>award_level_id</code>, <code>award_year</code>. Per the locked assumption, awards become a full research record inside the submission workflow — they already feed KPI, and unvalidated data must not.</p>
+  <p>The 31 existing rows currently attach straight to a lecturer with no workflow. They migrate as records with a synthetic <code>APPROVED</code> submission marked <code>origin = 'MIGRATED_V1'</code> and <code>decided_by = NULL</code>, so their unvalidated provenance stays visible rather than being laundered into a clean approval. All 31 have <code>award_year</code>, so effective dates are fine.</p>
+</section>
+
+<section class="sec" id="s7">
+  <div class="sec-head"><span class="lt">7</span><h2>Submission and validation architecture</h2></div>
+  <p class="sec-sub">D1 and D3 made structural.</p>
+
+  <pre class="mermaid">erDiagram
+  research_records ||--|| submissions : "exactly one"
+  submissions ||--o{ submission_revisions : "versions"
+  submissions ||--o{ submission_reviews : "decisions"
+  users ||--o{ submission_reviews : "reviewed by"
+  faculties ||--o{ submissions : "queued in"</pre>
+
+  <div class="tw">
+    <table>
+      <caption>submissions — current workflow state, one per research record</caption>
+      <thead><tr><th class="mono">Column</th><th class="mono">Type</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">id</td><td class="mono">BIGINT UNSIGNED PK</td><td></td></tr>
+        <tr><td class="mono">research_record_id</td><td class="mono">BIGINT UNSIGNED</td><td><strong>UNIQUE</strong>, FK, CASCADE. <strong>This constraint is D3</strong></td></tr>
+        <tr><td class="mono">status</td><td class="mono">ENUM</td><td>DRAFT · SUBMITTED · UNDER_REVIEW · APPROVED · REJECTED · REVISION_REQUESTED · WITHDRAWN · SUPERSEDED</td></tr>
+        <tr><td class="mono">current_revision</td><td class="mono">SMALLINT UNSIGNED</td><td>DEFAULT 1</td></tr>
+        <tr><td class="mono">submitted_by</td><td class="mono">BIGINT UNSIGNED</td><td>FK → users, RESTRICT</td></tr>
+        <tr><td class="mono">faculty_id_at_submission</td><td class="mono">BIGINT UNSIGNED</td><td>FK → faculties. Routes the queue; frozen</td></tr>
+        <tr><td class="mono">first_submitted_at</td><td class="mono">DATETIME</td><td>NULL while DRAFT</td></tr>
+        <tr><td class="mono">submitted_at</td><td class="mono">DATETIME</td><td>Latest submission or resubmission</td></tr>
+        <tr><td class="mono">claimed_by / claimed_at</td><td class="mono">—</td><td>Who is reviewing — prevents duplicate work</td></tr>
+        <tr><td class="mono">decided_by / decided_at</td><td class="mono">—</td><td>Latest decision. FK → users, so <em>any</em> role can be recorded</td></tr>
+        <tr><td class="mono">origin</td><td class="mono">ENUM</td><td>ARAMS_2 · MIGRATED_V1</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Note <code>decided_by</code> references <code>users</code>, not an admin table. That single change fixes the defect where 108 approvals recorded no approver because a TDPP had no row in <code>tbl_admin</code>.</p>
+
+  <h3>7.1 · Immutable review history</h3>
+  <p><code>submission_reviews</code>: <code>id</code>, <code>submission_id</code>, <code>revision_no</code>, <code>reviewer_user_id</code>, <code>reviewer_role</code>, <code>decision</code> (APPROVED · REJECTED · REVISION_REQUESTED), <code>remarks</code>, <code>decided_at</code>, <code>origin</code>. <strong>Insert only</strong> — no UPDATE or DELETE path exists in the application, and the database user has no rights to either on this table.</p>
+  <p><code>submission_revisions</code> stores a JSON snapshot of the record as submitted at each revision, so <em>"what did the reviewer actually see when they rejected version 1?"</em> has an answer. UNIQUE <code>(submission_id, revision_no)</code>.</p>
+
+  <div class="callout lock">
+    <p class="co-hd">D1 enforcement — three layers, no Admin fallback</p>
+    <ol>
+      <li><strong>Policy.</strong> <code>SubmissionPolicy::review()</code> returns true only when the actor's role is TDPP <em>and</em> they hold an active <code>faculty_leaders</code> appointment for <code>faculty_id_at_submission</code> <em>and</em> they are not the submitter.</li>
+      <li><strong>Data.</strong> <code>reviewer_role</code> permits <code>TDPP</code> for any row with <code>origin = 'ARAMS_2'</code>. <code>ADMIN_LEGACY</code> exists solely to carry 1.0 history and is rejected on insert for new rows.</li>
+      <li><strong>Absence.</strong> There is no admin-approval endpoint, no auto-approve path, and no bypass. <code>api/admin_add_record.php</code> is not carried forward. An Admin creating a record on a lecturer's behalf creates it as <code>DRAFT</code> owned by that lecturer, who must submit it themselves.</li>
+    </ol>
+  </div>
+
+  <h3>7.2 · State transitions as data</h3>
+  <p><code>submission_transitions</code> is a small reference table — <code>from_status</code>, <code>to_status</code>, <code>required_role</code>, <code>requires_remarks</code>, <code>label</code> — read by the state machine. Keeping transitions as rows rather than as <code>if</code> statements means the legal moves are inspectable, testable, and auditable in one place.</p>
+
+  <div class="tw">
+    <table>
+      <caption>submission_transitions — seeded rows</caption>
+      <thead><tr><th>From</th><th>To</th><th>Actor</th><th>Remarks required</th></tr></thead>
+      <tbody>
+        <tr><td>DRAFT</td><td>SUBMITTED</td><td>Owner</td><td class="dash">—</td></tr>
+        <tr><td>SUBMITTED</td><td>WITHDRAWN</td><td>Owner</td><td class="dash">—</td></tr>
+        <tr><td>SUBMITTED</td><td>UNDER_REVIEW</td><td>TDPP</td><td class="dash">—</td></tr>
+        <tr><td>UNDER_REVIEW</td><td>SUBMITTED</td><td>TDPP</td><td class="dash">— (release claim)</td></tr>
+        <tr><td>UNDER_REVIEW</td><td>APPROVED</td><td>TDPP</td><td class="dash">Optional</td></tr>
+        <tr><td>UNDER_REVIEW</td><td>REJECTED</td><td>TDPP</td><td class="tick">Required</td></tr>
+        <tr><td>UNDER_REVIEW</td><td>REVISION_REQUESTED</td><td>TDPP</td><td class="tick">Required</td></tr>
+        <tr><td>REVISION_REQUESTED</td><td>SUBMITTED</td><td>Owner</td><td class="dash">— (revision + 1)</td></tr>
+        <tr><td>APPROVED</td><td>SUPERSEDED</td><td>Admin</td><td class="tick">Required</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><code>REJECTED</code> and <code>WITHDRAWN</code> are terminal; <code>REVISION_REQUESTED</code> is not. That distinction is the point — rejection means the record does not belong in the repository, revision means it does once corrected. 1.0 collapsed both into "Rejected" and offered no way back, which is a likely source of the 16 duplicate publications.</p>
+
+  <p><strong>Editability:</strong> the owner may edit the underlying research record only while its submission is <code>DRAFT</code> or <code>REVISION_REQUESTED</code>. Enforced in the Policy, checked in the service, and asserted by tests.</p>
+</section>
+
+<section class="sec" id="s8">
+  <div class="sec-head"><span class="lt">8</span><h2>H-Index snapshot architecture</h2></div>
+  <p class="sec-sub">D2 — outside the submission workflow entirely.</p>
+
+  <div class="tw">
+    <table>
+      <caption>hindex_snapshots</caption>
+      <thead><tr><th class="mono">Column</th><th class="mono">Type</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">id</td><td class="mono">BIGINT UNSIGNED PK</td><td></td></tr>
+        <tr><td class="mono">staff_profile_id</td><td class="mono">BIGINT UNSIGNED</td><td>FK → staff_profiles, RESTRICT</td></tr>
+        <tr><td class="mono">metric_source_id</td><td class="mono">BIGINT UNSIGNED</td><td>FK → metric_sources (Scopus, WoS, Scholar, Others)</td></tr>
+        <tr><td class="mono">record_year</td><td class="mono">SMALLINT UNSIGNED</td><td>NOT NULL</td></tr>
+        <tr><td class="mono">effective_date</td><td class="mono">DATE</td><td>Date the value was observed</td></tr>
+        <tr><td class="mono">hindex_value</td><td class="mono">SMALLINT UNSIGNED</td><td>CHECK ≥ 0</td></tr>
+        <tr><td class="mono">citation_count</td><td class="mono">INT UNSIGNED</td><td>NULL</td></tr>
+        <tr><td class="mono">document_count</td><td class="mono">INT UNSIGNED</td><td>NULL — new, useful and cheap</td></tr>
+        <tr><td class="mono">recorded_by</td><td class="mono">BIGINT UNSIGNED</td><td>FK → users. <strong>Provenance replaces approval</strong></td></tr>
+        <tr><td class="mono">recorded_at / source_note</td><td class="mono">—</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>No submission FK.</strong> No status. No reviewer. D2 exactly. Trust comes from provenance — who recorded it, when, from which source — rather than from an approval step that could only ever confirm a value was copied correctly.</p>
+
+  <p><strong>UNIQUE <code>(staff_profile_id, metric_source_id, record_year)</code></strong> replaces the 1.0 constraint <code>uq_hindex_year_lecturer(record_year, data_id)</code>, which enforced nothing because <code>data_id</code> was already unique per submission. The new constraint is real, and one existing row violates it — lecturer 2 has two 2025 records. That must be resolved manually before migration; it cannot be resolved automatically because the two values may both be legitimate readings from different dates.</p>
+
+  <p><strong>Effect on the queue:</strong> 87 records leave the validation workflow, including the 77-row bulk import that generated 77 meaningless approvals. Under D2 those imports become exactly what they always were — an administrative data load.</p>
+
+  <p><strong>KPI still works.</strong> <code>kpi_measures.source_kind = 'METRIC_SNAPSHOT'</code> lets institutional targets like <em>"average H-Index 12"</em> — which exist in <code>tbl_kpi_target</code> today — continue to be scored. The current data cannot yet draw an H-Index trend, since no lecturer has records in two different years; the dashboard should say so rather than plot a single point.</p>
+</section>
+
+<section class="sec" id="s9">
+  <div class="sec-head"><span class="lt">9</span><h2>KPI architecture</h2></div>
+  <p class="sec-sub">D4 — credit follows the record's effective date. The two disconnected halves of 1.0 unify under one model.</p>
+
+  <pre class="mermaid">erDiagram
+  kpi_periods ||--o{ kpi_targets : scopes
+  kpi_measures ||--o{ kpi_targets : measures
+  kpi_targets ||--o{ kpi_target_criteria : filters
+  kpi_targets ||--o{ kpi_assignments : "assigned as"
+  kpi_targets ||--o{ kpi_progress : "tracked by"
+  kpi_assignments ||--o{ kpi_progress : "tracked by"
+  kpi_assignments ||--o{ kpi_contributions : "credited by"
+  research_records ||--o{ kpi_contributions : credits
+  hindex_snapshots ||--o{ kpi_contributions : credits
+  staff_profiles ||--o{ kpi_assignments : "assigned to"</pre>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Table</th><th>Purpose</th><th>Replaces</th></tr></thead>
+      <tbody>
+        <tr><td><code>kpi_periods</code></td><td><code>code</code>, <code>label</code>, <code>start_date</code>, <code>end_date</code>, <code>is_locked</code>. <strong>The concept 1.0 had no column for.</strong></td><td>—</td></tr>
+        <tr><td><code>kpi_measures</code></td><td><code>code</code>, <code>label</code>, <code>source_kind</code> (RESEARCH_RECORD / METRIC_SNAPSHOT), <code>research_type_id</code>, <code>aggregation</code> (COUNT/SUM/AVG/MAX), <code>value_column</code></td><td>Two divergent ENUMs</td></tr>
+        <tr><td><code>kpi_targets</code></td><td><code>period_id</code>, <code>measure_id</code>, <code>scope_type</code> (INSTITUTION/FACULTY/STAFF), <code>scope_id</code>, <code>target_value</code>, <code>created_by</code></td><td><code>tbl_kpi_target</code> + the target half of <code>tbl_kpi_task</code></td></tr>
+        <tr><td><code>kpi_target_criteria</code></td><td><code>target_id</code>, <code>field_path</code>, <code>operator</code> (= · in · &gt;= · contains), <code>value</code>. <strong>Rows, not columns.</strong></td><td>4 criteria columns</td></tr>
+        <tr><td><code>kpi_assignments</code></td><td><code>target_id</code>, <code>staff_profile_id</code>, <code>assigned_by</code>, <code>assigned_at</code>, <code>deadline</code>, <code>status</code>, <code>closed_at</code></td><td>The assignment half of <code>tbl_kpi_task</code></td></tr>
+        <tr><td><code>kpi_progress</code></td><td><code>target_id</code>, <code>assignment_id</code>, <code>achieved_value</code>, <code>target_value</code>, <code>percentage</code>, <code>computed_at</code></td><td><code>progress_count</code></td></tr>
+        <tr><td><code>kpi_contributions</code></td><td><code>assignment_id</code>, <code>target_id</code>, <code>research_record_id</code>, <code>hindex_snapshot_id</code>, <code>contributed_value</code>, <code>counted_on</code>. <strong>New.</strong></td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>Unifying institutional and individual targets.</strong> 1.0 had institutional targets nobody read and individual tasks that counted the wrong thing. Here both are <code>kpi_targets</code> differing only in <code>scope_type</code>. Institution and faculty targets are monitored; staff targets may additionally be <em>assigned</em> by a TDPP with a deadline. Progress computes identically for all three.</p>
+
+  <h3>9.1 · How credit is calculated</h3>
+  <ol>
+    <li>A submission reaches <code>APPROVED</code>. A domain event fires with the <code>research_record_id</code>.</li>
+    <li>The record's <code>effective_date</code> is read. <strong>If precision is <code>UNKNOWN</code>, processing stops — the record cannot be placed in a period</strong> and is listed for backfill.</li>
+    <li>Candidate targets are those whose <code>kpi_periods</code> range contains the effective date, whose measure matches the research type, and whose scope covers the owner.</li>
+    <li>Criteria are evaluated from <code>kpi_target_criteria</code>. <code>contains</code> is used for set-valued facts like indexing, which is why the Scopus/WoS defect cannot recur.</li>
+    <li>A <code>kpi_contributions</code> row is written. Progress is <strong>recomputed by summing contributions</strong>, never incremented.</li>
+    <li>If the record is later withdrawn, superseded, or soft-deleted, its contribution is deleted and progress recomputes downward.</li>
+  </ol>
+
+  <div class="callout lock">
+    <p class="co-hd">D4 in one line</p>
+    <p>A publication dated December 2026 and approved in January 2027 credits <strong>period 2026</strong>. Approval date determines when it becomes <em>visible</em>; effective date determines which period it <em>belongs to</em>. Validation delay can no longer distort performance.</p>
+  </div>
+
+  <p><strong>Why <code>kpi_contributions</code> matters.</strong> It is the difference between a progress number and an auditable one. A lecturer can see exactly which records counted; a TDPP can see why a target was met; and recomputation is idempotent because progress is derived rather than accumulated. The 1.0 counter that read 19 against a target of 1 is unrepresentable here.</p>
+
+  <p><strong>Migration:</strong> the 12 institutional targets migrate directly. The 9 tasks migrate as staff-scope targets plus assignments, with <strong>progress reset to zero and recomputed</strong> under the effective-date rule. Their existing progress values are not salvageable — they were computed under the lifetime-counting rule D4 replaces, so carrying them forward would import the defect.</p>
+</section>
+
+<section class="sec" id="s10">
+  <div class="sec-head"><span class="lt">10</span><h2>Audit architecture</h2></div>
+
+  <p>One append-only table. <code>audit_events</code>: <code>id</code>, <code>actor_user_id</code> (NULL for system), <code>actor_role</code>, <code>action</code> (ENUM), <code>auditable_type</code>, <code>auditable_id</code>, <code>changes</code> (JSON before/after), <code>context</code> (JSON), <code>ip_address</code>, <code>user_agent</code>, <code>created_at</code>.</p>
+
+  <p>Three changes from 1.0, each addressing a measured defect: <strong>actions are a typed enum</strong>, not free text — today's log contains the typo <code>Rejectd Submission</code>; <strong>coverage is enforced by emitting from the service layer</strong>, not from controllers — today 7 audit rows exist against 272 approvals; and <strong><code>changes</code> records what actually changed</strong>, which 1.0 never captured, so an Admin edit to an approved record is now reconstructable.</p>
+
+  <p><code>auditable_type</code> / <code>auditable_id</code> is intentionally polymorphic with no FK. Audit rows must survive the deletion of what they describe, so referential integrity would be actively wrong here. This is the one place polymorphism is the right answer.</p>
+
+  <p><strong>Not audited:</strong> page views, reads, or anything derivable. Today's log is 56% "Generated Report" noise while missing 265 of 272 approvals — coverage should follow significance, not convenience.</p>
+</section>
+
+<section class="sec" id="s11">
+  <div class="sec-head"><span class="lt">11</span><h2>Notification architecture</h2></div>
+
+  <p><code>notifications</code>: <code>id</code> (UUID), <code>type</code>, <code>notifiable_user_id</code>, <code>data</code> (JSON), <code>action_url</code>, <code>read_at</code>, <code>created_at</code>. <code>notification_preferences</code>: <code>user_id</code>, <code>type</code>, <code>in_app</code>, <code>email</code>, <code>digest</code>.</p>
+
+  <p>The message is rendered at display time from <code>type</code> and <code>data</code>, not stored as a pre-built sentence. That is what makes notifications translatable into Malay, filterable by type, groupable, and linked to the record they concern — none of which the current <code>CONCAT</code>-built strings support.</p>
+
+  <p><strong>The routing fix.</strong> Under D1, TDPP is the only validator, so <code>SubmissionSubmitted</code> notifies the <strong>active TDPP appointments for <code>faculty_id_at_submission</code></strong> — resolved through <code>faculty_leaders</code>. 1.0 notified every Admin and no TDPP, meaning the only role that could act was the only role not told. If no active appointment exists, the notification is raised to Admin as a <em>coverage alert</em>, not as a validation request — which is Blocker 1's early-warning path.</p>
+
+  <p>Email is queued, never sent inside the request. 1.0 sends mail synchronously inside the approval handler, so a slow SMTP server delays the reviewer's response.</p>
+</section>
+
+<section class="sec" id="s12">
+  <div class="sec-head"><span class="lt">12</span><h2>Reference data</h2></div>
+
+  <div class="callout">
+    <p class="co-hd">Table or enum? One rule</p>
+    <p><strong>Database ENUM</strong> for closed sets that carry no metadata and change only by migration: submission status, review decision, user role, scope type, aggregation, precision, origin.</p>
+    <p><strong>Reference table</strong> for anything institution-configurable, orderable, deactivatable, or carrying extra attributes. If Admin should be able to add a value without a deploy, it is a table.</p>
+    <p>I am deliberately <em>not</em> building one generic <code>reference_values</code> table. That pattern loses per-vocabulary foreign keys, which is the entire mechanism preventing the empty-string corruption found in <code>tbl_report</code>, <code>pub_type</code>, and <code>author_role</code>.</p>
+  </div>
+
+  <p>All 21 share the shape <code>id</code>, <code>code</code> (UNIQUE), <code>label</code>, <code>label_ms</code>, <code>sort_order</code>, <code>is_active</code>, plus any extra column noted below.</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Group</th><th>Tables</th><th>Seeded from</th></tr></thead>
+      <tbody>
+        <tr><td>Publication</td><td class="mono">publication_types · author_roles · indexings · countries</td><td><code>research_forms.js</code> — the most complete source</td></tr>
+        <tr><td>Grant</td><td class="mono">grant_levels · grant_categories · grant_roles · grant_statuses · funders</td><td>FRT cascade in JS</td></tr>
+        <tr><td>Income / IP / Award</td><td class="mono">income_categories · ip_types · ip_registration_statuses · award_types · award_levels</td><td>1.0 ENUMs + observed data</td></tr>
+        <tr><td>People</td><td class="mono">positions · grades · researcher_statuses · external_id_providers</td><td>Observed values, deduplicated EN/MS</td></tr>
+        <tr><td>Organisation</td><td class="mono">departments · research_group_categories</td><td>Free-text values, cleaned</td></tr>
+        <tr><td>Metrics / Research</td><td class="mono">metric_sources · research_types</td><td>1.0 ENUMs</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong><code>grant_categories.grant_level_id</code> encodes the FRT cascade in data.</strong> The level → category map currently lives only in JavaScript, which is why the database happily accepted 32 rows of <code>'University'</code> against a KPI enum expecting <code>'Universiti'</code>. As a foreign key, that state becomes unrepresentable.</p>
+
+  <p><strong><code>research_types</code> is the D6 extension point.</strong> Seeded with PUBLICATION, GRANT, IP_RECORD, RESEARCH_INCOME, AWARD. Adding RESEARCH_PROJECT or POSTGRAD_SUPERVISION later is one row plus one subtype table.</p>
+
+  <p><strong>Migration needs a value-mapping table</strong> — <code>legacy_value_map(vocabulary, legacy_value, target_code, decision, decided_by)</code> — recording every cleanup decision: <code>University</code> → <code>UNIVERSITI</code>, <code>Focus Group</code> → <code>FG</code>, <code>Profesor Madya</code> → <code>ASSOC_PROF</code>, <code>''</code> → <code>UNKNOWN</code>. It is the audit trail for the data cleaning itself, and it is what makes the migration reviewable rather than a black box.</p>
+</section>
+
+<section class="sec" id="s13">
+  <div class="sec-head"><span class="lt">13</span><h2>Reporting</h2></div>
+
+  <p><code>report_definitions</code>: <code>code</code>, <code>title</code>, <code>description</code>, <code>parameter_schema</code> (JSON), <code>minimum_role</code>, <code>is_active</code>. <code>report_runs</code>: <code>definition_id</code>, <code>requested_by</code>, <code>parameters</code> (JSON), <code>scope_type</code>, <code>scope_id</code>, <code>format</code>, <code>status</code>, <code>row_count</code>, <code>file_path</code>, <code>file_hash</code>, <code>generated_at</code>, <code>expires_at</code>.</p>
+
+  <p>Report type becomes a foreign key to <code>report_definitions</code> rather than an ENUM the code never writes valid values for. That single change fixes the defect where 52 of 57 report rows recorded <code>''</code>.</p>
+
+  <p><code>parameters</code> as JSON captures what was actually asked for; <code>scope_type</code> / <code>scope_id</code> record the scope applied at generation, so a TDPP's faculty report is permanently bound to that faculty. <code>file_hash</code> lets a printed report be traced back to the exact artifact that produced it — reruns give different numbers as data changes, so the stored artifact is the record of what was reported.</p>
+
+  <p><strong>Default:</strong> approved, non-deleted records only. Any other selection requires an explicit parameter and stamps a visible banner on the output.</p>
+</section>
+
+<!-- ================= RIGOUR ================= -->
+<div class="part-rule"><span>Rigour</span></div>
+
+<section class="sec" id="s14">
+  <div class="sec-head"><span class="lt">14</span><h2>Soft-delete strategy</h2></div>
+  <p class="sec-sub">Locked assumption 6 — deletion and workflow status are orthogonal.</p>
+
+  <p>1.0 let a record be simultaneously <code>Approved</code> and <code>is_deleted = 1</code>, and two rows already are. Nothing defined what that meant. Here the two axes are formally independent and their interaction is specified.</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Table</th><th>Soft delete</th><th>Rationale</th></tr></thead>
+      <tbody>
+        <tr><td><code>research_records</code></td><td class="tick">Yes</td><td>Cascades logically to its subtype and submission</td></tr>
+        <tr><td><code>staff_profiles</code>, <code>users</code></td><td class="tick">Yes</td><td>Deactivation must not orphan authored research</td></tr>
+        <tr><td><code>grant_projects</code>, <code>research_groups</code>, <code>faculties</code></td><td class="tick">Yes</td><td>Referenced by history</td></tr>
+        <tr><td><code>submissions</code></td><td class="cross">No</td><td>Derives visibility from its record. Deleting workflow separately is meaningless</td></tr>
+        <tr><td><code>submission_reviews</code>, <code>submission_revisions</code>, <code>audit_events</code></td><td class="cross">No</td><td><strong>Immutable history.</strong> Deleting a decision defeats the purpose</td></tr>
+        <tr><td><code>kpi_contributions</code></td><td class="cross">No</td><td>Hard-deleted on recompute — derived data, not a fact</td></tr>
+        <tr><td><code>hindex_snapshots</code></td><td class="tick">Yes</td><td>Corrections happen; the superseded reading stays visible</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>Interaction rules</h4>
+  <ol>
+    <li>A soft-deleted record is excluded from analytics, KPI, and reports <strong>regardless of workflow status</strong>. Deletion always wins.</li>
+    <li>Deleting a record does <strong>not</strong> change its submission status. An approved-then-deleted record stays <code>APPROVED</code> and deleted — the approval is a historical fact.</li>
+    <li>Deletion removes the record's <code>kpi_contributions</code> and triggers recompute, so KPI progress falls.</li>
+    <li>Deletion requires a reason and writes an audit event with the pre-deletion state.</li>
+    <li>Restoration is an Admin action, audited, and triggers recompute.</li>
+    <li>Only Admin may delete an approved record. A lecturer may delete only a <code>DRAFT</code>.</li>
+    <li>Hard deletion exists nowhere in the application. Purging is a documented DBA procedure with a retention policy.</li>
+  </ol>
+
+  <p><strong>The two existing rows</strong> (data_id 88 and 212, both Approved and deleted by admin user 1 on 2026-06-14) migrate as <code>APPROVED</code> + soft-deleted, with <code>deletion_reason = 'Migrated from ARAMS 1.0 — original reason not recorded'</code>. Both have matching <code>Admin Deleted Publication</code> audit entries, so the actor is known even though the reason is not.</p>
+</section>
+
+<section class="sec" id="s15">
+  <div class="sec-head"><span class="lt">15</span><h2>Cardinality</h2></div>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Relationship</th><th class="mono">Card.</th><th>Enforced by</th></tr></thead>
+      <tbody>
+        <tr><td>users → staff_profiles</td><td class="mono">1 : 1</td><td>UNIQUE(user_id)</td></tr>
+        <tr><td>staff_profiles → staff_affiliations</td><td class="mono">1 : N</td><td>At most one open row with is_primary</td></tr>
+        <tr><td>faculties → faculty_leaders</td><td class="mono">1 : N</td><td>Multiple concurrent TDPPs permitted</td></tr>
+        <tr><td>staff_profiles → research_records</td><td class="mono">1 : N</td><td>FK</td></tr>
+        <tr><td>research_records → subtype</td><td class="mono">1 : 1</td><td>Subtype PK <em>is</em> the FK</td></tr>
+        <tr><td><strong>research_records → submissions</strong></td><td class="mono">1 : 1</td><td><strong>UNIQUE(research_record_id) — this is D3</strong></td></tr>
+        <tr><td>submissions → submission_reviews</td><td class="mono">1 : N</td><td>Append only</td></tr>
+        <tr><td>submissions → submission_revisions</td><td class="mono">1 : N</td><td>UNIQUE(submission_id, revision_no)</td></tr>
+        <tr><td>grant_projects → grants</td><td class="mono">1 : N</td><td>One project, many participants</td></tr>
+        <tr><td>grant_projects → research_incomes</td><td class="mono">1 : N</td><td>Nullable FK</td></tr>
+        <tr><td>publications → publication_authors</td><td class="mono">1 : N</td><td>UNIQUE(record, author_order)</td></tr>
+        <tr><td>publications → publication_indexings</td><td class="mono">1 : N</td><td>UNIQUE(record, indexing_id)</td></tr>
+        <tr><td>staff_profiles → hindex_snapshots</td><td class="mono">1 : N</td><td>UNIQUE(staff, source, year)</td></tr>
+        <tr><td>kpi_targets → kpi_assignments</td><td class="mono">1 : N</td><td>UNIQUE(target_id, staff_profile_id)</td></tr>
+        <tr><td>kpi_assignments → kpi_contributions</td><td class="mono">1 : N</td><td>UNIQUE(assignment, record)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="sec" id="s16">
+  <div class="sec-head"><span class="lt">16</span><h2>Keys and constraints</h2></div>
+
+  <h4>Primary and natural keys</h4>
+  <p>Every table takes a surrogate <code>BIGINT UNSIGNED AUTO_INCREMENT</code> primary key, except subtype tables where <code>research_record_id</code> <em>is</em> the primary key — that choice is what makes one-to-one structurally impossible to violate. Natural keys are enforced as UNIQUE alongside: <code>users.email</code>, <code>staff_profiles.staff_no</code>, <code>faculties.code</code>, <code>grant_projects.grant_code</code>, every reference <code>code</code>.</p>
+
+  <h4>Uniqueness that fixes measured defects</h4>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Constraint</th><th>Prevents</th><th>Rows blocking it today</th></tr></thead>
+      <tbody>
+        <tr><td><code>submissions(research_record_id)</code></td><td>Bundled submissions</td><td class="num">67 to split</td></tr>
+        <tr><td><code>publications(doi)</code> where not null</td><td>Duplicate publications</td><td class="num">16 to review</td></tr>
+        <tr><td><code>grant_projects(grant_code)</code></td><td>Triple-counted funding</td><td class="num">11 to merge</td></tr>
+        <tr><td><code>grants(grant_project_id, owner)</code></td><td>One lecturer claiming a grant twice</td><td class="num">11 related</td></tr>
+        <tr><td><code>hindex_snapshots(staff, source, year)</code></td><td>Conflicting H-Index readings</td><td class="num">1 to resolve</td></tr>
+        <tr><td><code>ip_records(ip_number)</code> where not null</td><td>Duplicate IP</td><td class="num">0</td></tr>
+        <tr><td><code>staff_external_ids(provider, value)</code></td><td>Two staff, one ORCID</td><td class="num">0</td></tr>
+        <tr><td><code>kpi_targets(period, measure, scope_type, scope_id)</code></td><td>Contradictory targets</td><td class="num">0</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>Referential actions</h4>
+  <ul>
+    <li><strong>RESTRICT</strong> where deletion would destroy history: staff → records, faculty → affiliations, reference values in use, users → reviews.</li>
+    <li><strong>CASCADE</strong> only where the child is meaningless alone: <code>research_records</code> → subtype, → <code>submissions</code>, publication authors and indexings.</li>
+    <li><strong>SET NULL</strong> for genuinely optional links: <code>research_incomes.grant_project_id</code>, <code>staff_affiliations.research_group_id</code>.</li>
+    <li><strong>No FK</strong> on <code>audit_events.auditable_id</code> only — audit must outlive its subject.</li>
+  </ul>
+
+  <h4>CHECK constraints</h4>
+  <ul>
+    <li><code>effective_date IS NOT NULL OR effective_date_precision = 'UNKNOWN'</code> — Blocker 2's guarantee that a missing date is always declared, never implied.</li>
+    <li><code>valid_to IS NULL OR valid_to &gt;= valid_from</code> on affiliations and appointments.</li>
+    <li><code>end_date IS NULL OR end_date &gt;= start_date</code> on grant projects.</li>
+    <li><code>amount &gt; 0</code> on income; <code>total_amount &gt;= 0</code> on grant projects.</li>
+    <li><code>hindex_value &gt;= 0</code>; <code>target_value &gt; 0</code>; <code>impact_factor &gt;= 0</code>.</li>
+    <li><code>record_year BETWEEN 1950 AND YEAR(CURDATE()) + 1</code> on snapshots and publication years.</li>
+  </ul>
+  <p>These matter more than usual here: MySQL 8 enforces CHECK constraints, and 1.0's non-strict mode is exactly what let invalid values become blanks.</p>
+</section>
+
+<section class="sec" id="s17">
+  <div class="sec-head"><span class="lt">17</span><h2>Index plan</h2></div>
+  <p class="sec-sub">Sized for 500 staff and roughly 50,000 research records — two orders of magnitude beyond today.</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Table</th><th class="mono">Index</th><th>Serves</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="4"><code>research_records</code></td><td class="mono">(owner_staff_profile_id, research_type_id, deleted_at)</td><td>"My research" — the hottest query</td></tr>
+        <tr><td class="mono">(attributed_faculty_id, effective_date, research_type_id)</td><td>Faculty analytics and time series</td></tr>
+        <tr><td class="mono">(effective_date, research_type_id)</td><td>Institution trends</td></tr>
+        <tr><td class="mono">(effective_date_precision)</td><td>The backfill worklist</td></tr>
+        <tr><td rowspan="3"><code>submissions</code></td><td class="mono">UNIQUE (research_record_id)</td><td>D3 + the 1:1 join</td></tr>
+        <tr><td class="mono">(faculty_id_at_submission, status, submitted_at)</td><td>The TDPP validation queue</td></tr>
+        <tr><td class="mono">(status, submitted_at)</td><td>Queue-age monitoring</td></tr>
+        <tr><td><code>submission_reviews</code></td><td class="mono">(submission_id, revision_no, decided_at)</td><td>Validation history timeline</td></tr>
+        <tr><td rowspan="2"><code>staff_affiliations</code></td><td class="mono">(staff_profile_id, valid_from, valid_to)</td><td>Point-in-time attribution resolution</td></tr>
+        <tr><td class="mono">(faculty_id, valid_to)</td><td>Current faculty roster</td></tr>
+        <tr><td><code>faculty_leaders</code></td><td class="mono">(faculty_id, valid_to, appointment)</td><td>"Who validates here?" and the coverage gap query</td></tr>
+        <tr><td><code>publications</code></td><td class="mono">(pub_year, quartile) · UNIQUE(doi)</td><td>Quartile trends, dedup</td></tr>
+        <tr><td><code>publication_indexings</code></td><td class="mono">(indexing_id, research_record_id)</td><td>Indexing filters — replaces the broken SET match</td></tr>
+        <tr><td><code>grants</code></td><td class="mono">(grant_project_id) · (grant_role_id)</td><td>Participation lookups</td></tr>
+        <tr><td><code>kpi_contributions</code></td><td class="mono">(assignment_id) · (research_record_id)</td><td>Recompute and reverse-lookup on delete</td></tr>
+        <tr><td><code>hindex_snapshots</code></td><td class="mono">UNIQUE(staff, source, year) · (record_year)</td><td>Trend queries</td></tr>
+        <tr><td><code>audit_events</code></td><td class="mono">(auditable_type, auditable_id, created_at) · (actor_user_id, created_at)</td><td>Record and actor history</td></tr>
+        <tr><td><code>notifications</code></td><td class="mono">(notifiable_user_id, read_at, created_at)</td><td>Unread badge</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>Dropped from 1.0, with reasons</h4>
+  <ul>
+    <li><code>idx_grant_year(start_date)</code> — indexed a column that is 99% NULL.</li>
+    <li><code>uq_hindex_year_lecturer(record_year, data_id)</code> — unique on a pair already unique by construction; it enforced nothing.</li>
+    <li>Single-column <code>idx_status</code>, <code>idx_email</code> — subsumed by composites or duplicating the UNIQUE key.</li>
+  </ul>
+
+  <h4>Materialised analytics</h4>
+  <p><code>analytics_faculty_period</code> and <code>analytics_staff_period</code> are refreshed nightly and on approval, holding pre-aggregated counts and sums per faculty or staff member per period. Dashboards read these; drill-downs go to source. This replaces <code>vw_lecturer_kpi</code>, which joins five domain tables through one parent in a single pass — correct only while each submission has at most one child of each type, which D3 guarantees but which the 1.0 data already violated 67 times. It also computed "current H-Index" as <code>MAX()</code> across all years rather than the latest year's value; the materialised version takes the value at the most recent <code>record_year</code>.</p>
+</section>
+
+<section class="sec" id="s18">
+  <div class="sec-head"><span class="lt">18</span><h2>Normalization assessment</h2></div>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Form</th><th>1.0</th><th>2.0</th><th>What changed</th></tr></thead>
+      <tbody>
+        <tr><td>1NF</td><td class="cross">Violated</td><td class="tick">Satisfied</td><td>Author and inventor lists → join tables; indexing SET → <code>publication_indexings</code>; external IDs → <code>staff_external_ids</code></td></tr>
+        <tr><td>2NF</td><td class="tick">Mostly</td><td class="tick">Satisfied</td><td>Surrogate keys throughout; no partial dependencies</td></tr>
+        <tr><td>3NF</td><td class="cross">Violated</td><td class="tick">Satisfied + 3 declared exceptions</td><td>Derived <code>research_group_category</code> dropped; <code>progress_count</code> replaced by computed progress</td></tr>
+        <tr><td>BCNF</td><td class="cross">Not assessed</td><td class="tick">Satisfied</td><td>No overlapping candidate keys with partial determinants</td></tr>
+        <tr><td>Reference data</td><td class="cross">Absent</td><td class="tick">21 tables, FK-enforced</td><td>Vocabularies leave JavaScript and gain foreign keys</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout decide">
+    <p class="co-hd">The three declared denormalizations</p>
+    <ol>
+      <li><strong><code>research_records.attributed_faculty_id</code></strong> — derivable from affiliations + effective date. Frozen so published figures are stable and attribution is auditable. Nightly reconciliation reports divergence rather than silently correcting it.</li>
+      <li><strong><code>research_records.display_title</code></strong> — duplicates the subtype title. Avoids a five-way LEFT JOIN on every queue and list. Written in the same transaction; consistency-checked nightly.</li>
+      <li><strong><code>kpi_progress</code></strong> — fully derivable from <code>kpi_contributions</code>. Materialised because dashboards read it constantly. Idempotent recompute, so it cannot drift the way <code>progress_count</code> did.</li>
+    </ol>
+    <p>Each is denormalized for a stated reason, has a defined maintainer, and has a reconciliation job. <strong>1.0's denormalizations had none of the three</strong> — which is precisely why <code>faculty_id</code> went unread for a year and <code>progress_count</code> reached 19 against a target of 1.</p>
+  </div>
+</section>
+
+<section class="sec" id="s19">
+  <div class="sec-head"><span class="lt">19</span><h2>Migration mapping</h2></div>
+
+  <div class="tw">
+    <table>
+      <caption>1.0 → 2.0, table by table</caption>
+      <thead><tr><th>ARAMS 1.0</th><th class="num">Rows</th><th>ARAMS 2.0</th><th>Transformation</th></tr></thead>
+      <tbody>
+        <tr><td><code>tbl_user</code></td><td class="num">105</td><td><code>users</code></td><td>Direct. bcrypt hashes carry over unchanged</td></tr>
+        <tr><td><code>tbl_lecturer</code> + <code>tbl_tdpp</code> + <code>tbl_admin</code></td><td class="num">105</td><td><code>staff_profiles</code></td><td>Union — no collisions confirmed</td></tr>
+        <tr><td><code>tbl_lecturer</code> ID columns</td><td class="num">98</td><td><code>staff_external_ids</code></td><td>5 columns → rows, blanks dropped</td></tr>
+        <tr><td><code>tbl_lecturer.faculty_id</code> + <code>tbl_faculty_transfer</code></td><td class="num">98 + 4</td><td><code>staff_affiliations</code></td><td>Open row each, then replay 4 transfers</td></tr>
+        <tr><td><code>tbl_tdpp</code></td><td class="num">5</td><td><code>faculty_leaders</code></td><td>Becomes a dated appointment. <strong>FKAAS gap surfaces</strong></td></tr>
+        <tr><td><code>tbl_research_data</code></td><td class="num">278</td><td><code>research_records</code> + <code>submissions</code></td><td><strong>Split 67 bundles → ~345 records</strong></td></tr>
+        <tr><td><code>tbl_publication</code></td><td class="num">107</td><td><code>publications</code> + authors + indexings</td><td>16 duplicates need review</td></tr>
+        <tr><td><code>tbl_grant</code></td><td class="num">71</td><td><code>grant_projects</code> + <code>grants</code></td><td><strong>Dedup 11 codes → ~58 projects, 71 participations</strong></td></tr>
+        <tr><td><code>tbl_hindex</code></td><td class="num">87</td><td><code>hindex_snapshots</code></td><td><strong>Leaves the workflow (D2).</strong> 1 duplicate to resolve</td></tr>
+        <tr><td><code>tbl_ip_record</code></td><td class="num">18</td><td><code>ip_records</code></td><td>All 18 → precision UNKNOWN</td></tr>
+        <tr><td><code>tbl_research_income</code></td><td class="num">72</td><td><code>research_incomes</code></td><td>Grant FK repointed to project</td></tr>
+        <tr><td><code>tbl_award</code></td><td class="num">31</td><td><code>awards</code> + records + submissions</td><td>Enters the workflow, marked migrated</td></tr>
+        <tr><td><code>tbl_kpi_target</code></td><td class="num">12</td><td><code>kpi_targets</code></td><td>Scope INSTITUTION / FACULTY. <strong>Finally read</strong></td></tr>
+        <tr><td><code>tbl_kpi_task</code></td><td class="num">9</td><td><code>kpi_targets</code> + <code>kpi_assignments</code></td><td>Criteria → rows. <strong>Progress reset and recomputed (D4)</strong></td></tr>
+        <tr><td><code>tbl_audit_log</code></td><td class="num">102</td><td><code>audit_events</code></td><td>Free text → enum via mapping table</td></tr>
+        <tr><td><code>tbl_notification</code></td><td class="num">52</td><td><code>notifications</code></td><td>Strings → <code>type</code> = LEGACY, message in <code>data</code></td></tr>
+        <tr><td><code>tbl_report</code></td><td class="num">57</td><td><code>report_runs</code></td><td>52 blank types → inferred or UNKNOWN</td></tr>
+        <tr><td><code>tbl_password_reset</code>, <code>tbl_login_attempt</code></td><td class="num">1, 0</td><td>Same</td><td>Direct</td></tr>
+        <tr><td><code>tbl_faculty</code>, <code>tbl_research_group</code></td><td class="num">12, 13</td><td>Same</td><td>Direct</td></tr>
+        <tr><td>4 views</td><td class="num">—</td><td><code>analytics_*</code></td><td>Replaced; MAX-vs-latest H-Index bug fixed</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>The bundle split, concretely</h4>
+  <div class="ev">shape (pub/grant/hindex/ip/income)   subs   becomes
+0/1/0/0/1   grant + income                60  →  60 grant records + 60 income records
+1/1/0/0/1   pub + grant + income           3  →   9 records
+0/2/0/0/2   two grants + two incomes       3  →  12 records
+0/1/1/0/1   grant + hindex + income        1  →   2 records + 1 snapshot (D2)
+
+278 submissions  →  ~345 research records + 87 metric snapshots</div>
+
+  <p>Each split record inherits the parent's status, remarks, <code>validated_at</code>, and reviewer, and gets a synthetic revision-1 review. Where the approver is unknown — 108 rows — <code>decided_by</code> is NULL with <code>reviewer_role = 'ADMIN_LEGACY'</code> and remarks noting the gap. <strong>That provenance loss is permanent and must be visible in the UI</strong>, not rendered as a blank field.</p>
+
+  <h4>Reconciliation gate</h4>
+  <p>Migration is accepted only when a reconciliation report balances: record counts per type, per faculty, and per year; total grant value before and after dedup with the difference explained; KPI progress before and after with every change attributable to D4; and a full list of records landing in <code>UNKNOWN</code> precision. It must run clean twice in a row on a full copy before touching production.</p>
+</section>
+
+<section class="sec" id="s20">
+  <div class="sec-head"><span class="lt">20</span><h2>Open items for your decision</h2></div>
+
+  <div class="find crit">
+    <div class="find-hd"><span class="chip crit">Q1</span><span class="t">FKAAS has no TDPP — confirm the behaviour</span></div>
+    <p>Proposed: refuse submission with a clear message when the submitter's faculty has no active TDPP appointment, and raise a coverage alert to Admin. No Admin fallback, per D1.</p>
+    <p><strong>Confirm:</strong> (a) refusing submission is right, and (b) FKAAS receives an appointment before its 77 accounts are activated.</p>
+  </div>
+
+  <div class="find crit">
+    <div class="find-hd"><span class="chip crit">Q2</span><span class="t">88 records have no effective date — confirm the UNKNOWN precision approach</span></div>
+    <p>Proposed: migrate with <code>effective_date_precision = 'UNKNOWN'</code>; count in totals, exclude from period-scoped KPI and time series, surface on an Admin backfill worklist. New records require a real date.</p>
+    <p><strong>Confirm:</strong> and name who owns backfilling 70 grant start dates and 18 IP filing dates. Grant and IP KPI targets cannot be scored until then.</p>
+  </div>
+
+  <div class="find warn">
+    <div class="find-hd"><span class="chip warn">Q3</span><span class="t">Grant dedup — merge 11 codes, or keep them separate?</span></div>
+    <p>The project/participation split is right in principle, but merging assumes <code>Q940</code>'s three rows really are one grant. If UTHM cannot confirm that quickly, the alternative is to migrate each as its own project and merge later — safe, but leaves funding totals inflated in the interim.</p>
+    <p><strong>Recommend:</strong> verify against UTHM records first. Eleven codes is an afternoon's work and the alternative bakes in a known error.</p>
+  </div>
+
+  <div class="find warn">
+    <div class="find-hd"><span class="chip warn">Q4</span><span class="t">The 77 FKAAS shell accounts — activate, archive, or hold?</span></div>
+    <p>They are inactive, have no profile beyond a name, and hold one 2026 H-Index each. They distort any per-capita metric: FKAAS shows 77 lecturers and almost no output. Options: activate and onboard; migrate as archived staff excluded from per-capita denominators; or hold and migrate later.</p>
+    <p><strong>Recommend:</strong> migrate as archived, excluded from per-capita metrics until activated. Their H-Index snapshots stay — they are legitimate institutional data.</p>
+  </div>
+
+  <div class="find info">
+    <div class="find-hd"><span class="chip info">Q5</span><span class="t">Benchmark suppression threshold</span></div>
+    <p>Proposed minimum cohort: three faculties excluding the requester. With six faculties currently reporting, benchmarking works today but sits close to the limit. A stricter threshold is safer; a looser one is more useful. <strong>Confirm three, or set your own.</strong></p>
+  </div>
+
+  <div class="callout lock">
+    <p class="co-hd">Assumptions I made without asking</p>
+    <ul>
+      <li>A TDPP may hold a research record of their own; it routes to another TDPP in the same faculty, or is blocked if none exists. Self-review is never permitted. No TDPP currently has a lecturer profile, so this is forward-looking.</li>
+      <li><code>staff_no</code> is the natural key for any future HR integration and needs a canonical format. Migration preserves values as-is and flags the four non-conforming shapes.</li>
+      <li>Currency is <code>MYR</code> throughout, stored explicitly rather than assumed.</li>
+      <li>Timestamps are stored UTC and rendered in <code>Asia/Kuala_Lumpur</code>. 1.0 stored local time with no zone, so migrated timestamps are interpreted as MYT.</li>
+      <li>Quartile stays a database ENUM (Q1–Q4, N/A) — a closed set fixed by JCR/SJR that carries no metadata.</li>
+    </ul>
+  </div>
+</section>
+
+<footer class="end">
+  <p><strong>Phase 2 data architecture is complete as a specification. No migrations, models, or code have been written, and the existing data is untouched.</strong></p>
+  <p>Phase 3 begins on your answers to Q1–Q5. Q1 and Q2 are genuine blockers: without a TDPP appointment for FKAAS, 77 lecturers have no validation path, and without a decision on missing effective dates, 88 records cannot be placed in a KPI period. Q3, Q4, and Q5 shape the migration but do not block the schema.</p>
+</footer>
+
+</main>
+</div>
