@@ -1,0 +1,33 @@
+{
+ "Universiti": [
+  "Tier 1",
+  "RE-GG",
+  "Contract",
+  "GPPS",
+  "GPP",
+  "ICI",
+  "UTHM Internal (VoT)"
+ ],
+ "National": [
+  "Geran Tanpa Dana (X)",
+  "FRGS",
+  "PRGS",
+  "TRGS",
+  "LRGS",
+  "Geran Kontrak Kementerian",
+  "Lain-Lain Geran Kebangsaan",
+  "KKP",
+  "PPRN",
+  "Sepadan RESIP",
+  "Sepadan MTUN"
+ ],
+ "International": [
+  "International"
+ ],
+ "NGO": [
+  "NGO"
+ ],
+ "Industries": [
+  "Industries"
+ ]
+}

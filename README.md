@@ -10,14 +10,14 @@ A rebuild of ARAMS, the centralised platform that tracks lecturer research outpu
 
 ## Status
 
-The rebuild is in the design stage. **No ARAMS 2.0 code has been written yet.**
+The database layer is built and verified. **No API endpoints or UI exist yet.**
 
 | Phase | Scope | State |
 |---|---|---|
 | 0 | Discovery — inspect existing code, schema, and real data | ✅ Complete |
 | 1 | System audit — strengths, defects, technical debt | ✅ Complete |
 | 2 | Data architecture — domain model, ERD, tables, constraints | ✅ Complete, under review |
-| 3 | Database implementation — migrations, seeders, data migration | ⏳ Blocked on Q1–Q2 below |
+| 3 | Database implementation — migrations, models, seeders | ✅ Complete and verified |
 | 4 | Backend — Laravel API, auth, workflow, KPI, analytics | Not started |
 | 5 | Frontend — React portals for Lecturer, TDPP, Admin | Not started |
 | 6–8 | Integration, testing, hardening | Not started |
@@ -45,11 +45,42 @@ Every figure in both documents was derived by querying the actual production dum
 │   ├── assets/                     CSS, JS, images
 │   └── admin/ lecturer/ grant/ …   abandoned first generation (see audit)
 │
+├── backend/                        ARAMS 2.0 — Laravel 12 API
+│   ├── app/Models/                 34 Eloquent models + 19 reference models
+│   ├── app/Enums/                  11 backed enums
+│   ├── database/migrations/        14 migrations — 68 tables
+│   ├── database/seeders/           reference data and initial data
+│   └── tests/Feature/              schema constraint tests
+│
 ├── database/
-│   └── arams_uthm_schema.sql       structure only — no data (see below)
+│   └── arams_uthm_schema.sql       ARAMS 1.0 structure only — no data
 │
 └── docs/                           Phase 0–2 deliverables
 ```
+
+## Running the backend
+
+Requires PHP 8.2+, Composer, and MySQL 8 or MariaDB 10.4+.
+
+```bash
+cd backend
+composer install
+cp .env.example .env && php artisan key:generate
+php artisan migrate --seed
+```
+
+The schema is verified against MariaDB 10.4 in strict mode. `php artisan test`
+runs the constraint suite, which asserts that each locked decision is enforced
+by the database rather than by convention.
+
+| | Verified |
+|---|---|
+| Tables | 68 |
+| Foreign keys | 88 |
+| Unique constraints | 52 |
+| Check constraints | 25 |
+| Indexes | 232 |
+| Constraint tests | 9 passing |
 
 ## Database
 
@@ -72,12 +103,24 @@ These were approved before Phase 2 and are not to be reopened without the projec
 
 Roles are exactly three: **Lecturer**, **TDPP**, **Admin**. TNCPI is not an application role.
 
-## Open questions blocking Phase 3
+## Open questions
 
-1. **FKAAS has 77 lecturers and no TDPP appointment.** Under D1 their submissions have no validator. Proposed: refuse submission with a clear message and raise a coverage alert to Admin — no Admin fallback.
-2. **88 records have no effective date** (70 of 71 grants, all 18 IP records). Proposed: migrate with `effective_date_precision = 'UNKNOWN'`, count in totals, exclude from period-scoped KPI, and surface on an Admin backfill worklist.
+The schema accommodates both of these, so Phase 3 was not blocked. They block
+the **data migration** from ARAMS 1.0, which is a separate reviewed step.
 
-Three further questions — grant deduplication, the 77 inactive accounts, and the benchmark suppression threshold — shape the migration but do not block the schema. All five are detailed at the end of the Phase 2 document.
+1. **FKAAS has 77 lecturers and no TDPP appointment.** Under D1 their submissions
+   have no validator. The schema models TDPP as a dated appointment
+   (`faculty_leaders`), so faculties without one are queryable and raise a
+   coverage alert — no Admin fallback was introduced. Needs an appointment
+   before those accounts are activated.
+2. **88 records have no effective date** (70 of 71 grants, all 18 IP records).
+   They migrate with `effective_date_precision = 'UNKNOWN'`: counted in totals,
+   excluded from period-scoped KPI, surfaced on an Admin backfill worklist.
+   Needs an owner for the backfill.
+
+Three further questions — grant deduplication, the 77 inactive accounts, and the
+benchmark suppression threshold — shape the migration but not the schema. All
+five are detailed at the end of the Phase 2 document.
 
 ## Security notice for ARAMS 1.0
 
