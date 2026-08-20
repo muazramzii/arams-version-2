@@ -10,7 +10,7 @@ A rebuild of ARAMS, the centralised platform that tracks lecturer research outpu
 
 ## Status
 
-The database layer is built and verified. **No API endpoints or UI exist yet.**
+Database and the core API are built and verified. **No UI exists yet.**
 
 | Phase | Scope | State |
 |---|---|---|
@@ -18,7 +18,10 @@ The database layer is built and verified. **No API endpoints or UI exist yet.**
 | 1 | System audit — strengths, defects, technical debt | ✅ Complete |
 | 2 | Data architecture — domain model, ERD, tables, constraints | ✅ Complete, under review |
 | 3 | Database implementation — migrations, models, seeders | ✅ Complete and verified |
-| 4 | Backend — Laravel API, auth, workflow, KPI, analytics | Not started |
+| 4a | Backend — auth, roles, policies, audit | ✅ Complete and verified |
+| 4b | Backend — research records, submissions, validation | ✅ Complete and verified |
+| 4c | Backend — KPI engine | ⚙️ Service done; endpoints pending |
+| 4d | Backend — analytics, reports, notifications | Not started |
 | 5 | Frontend — React portals for Lecturer, TDPP, Admin | Not started |
 | 6–8 | Integration, testing, hardening | Not started |
 
@@ -48,9 +51,12 @@ Every figure in both documents was derived by querying the actual production dum
 ├── backend/                        ARAMS 2.0 — Laravel 12 API
 │   ├── app/Models/                 34 Eloquent models + 19 reference models
 │   ├── app/Enums/                  11 backed enums
-│   ├── database/migrations/        14 migrations — 68 tables
+│   ├── app/Http/Controllers/Api/V1 auth · research records · submissions
+│   ├── app/Policies/               6 policies — where D1 is enforced
+│   ├── app/Services/               submission workflow · KPI · audit · attribution
+│   ├── database/migrations/        15 migrations — 69 tables
 │   ├── database/seeders/           reference data and initial data
-│   └── tests/Feature/              schema constraint tests
+│   └── tests/Feature/              constraints · role boundaries · lifecycle
 │
 ├── database/
 │   └── arams_uthm_schema.sql       ARAMS 1.0 structure only — no data
@@ -75,12 +81,30 @@ by the database rather than by convention.
 
 | | Verified |
 |---|---|
-| Tables | 68 |
+| Tables | 69 |
 | Foreign keys | 88 |
 | Unique constraints | 52 |
 | Check constraints | 25 |
 | Indexes | 232 |
-| Constraint tests | 9 passing |
+| API routes (`/api/v1`) | 21 |
+| Tests | 34 passing, 107 assertions |
+
+### What the tests prove
+
+Each one reproduces a defect measured in the real ARAMS 1.0 data and asserts
+that ARAMS 2.0 refuses it:
+
+- **`SchemaConstraintTest`** — two submissions on one record, an undeclared
+  missing effective date, a duplicate grant claim, conflicting H-Index
+  readings, an incoherent KPI scope, rewriting validation history.
+- **`RoleBoundaryTest`** — Admin cannot approve (D1), a TDPP cannot approve
+  outside their faculty or without a current appointment, nobody reviews their
+  own work, a lecturer cannot read a colleague's record by changing the id in
+  the URL, and submission is refused where no TDPP is appointed.
+- **`SubmissionLifecycleTest`** — draft → submit → revision requested →
+  resubmit → approve, with both decisions preserved; credit lands in the
+  period of the publication year rather than the approval date (D4); progress
+  falls again when a record is deleted.
 
 ## Database
 
