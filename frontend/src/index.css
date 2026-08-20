@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+/**
+ * ARAMS 2.0 design tokens.
+ *
+ * Institutional, dense, quiet — the direction set in the Phase 2 document.
+ * Colour is reserved for status and semantics; the accent appears on exactly
+ * one thing per view. No gradients, no glass, no animated counters.
+ */
+@theme {
+  --color-paper: #f4f6f7;
+  --color-surface: #ffffff;
+  --color-surface-2: #edf1f2;
+  --color-ink: #12212e;
+  --color-ink-2: #3c4c58;
+  --color-ink-3: #6b7b87;
+  --color-rule: #d3dbdf;
+  --color-rule-strong: #afbdc4;
+
+  --color-accent: #0e5a6b;
+  --color-accent-hover: #0b4756;
+  --color-accent-soft: #dceaed;
+
+  /* Semantic — separate from the accent, never decorative. */
+  --color-good: #1f6b4a;
+  --color-good-soft: #ddede4;
+  --color-warn: #8a5a00;
+  --color-warn-soft: #f7edd8;
+  --color-crit: #9b2c2c;
+  --color-crit-soft: #f6e3e3;
+  --color-info: #3a4e8c;
+  --color-info-soft: #e3e7f4;
+
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --font-serif: "IBM Plex Serif", Georgia, serif;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+/* Figures that line up in columns should stay aligned. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
