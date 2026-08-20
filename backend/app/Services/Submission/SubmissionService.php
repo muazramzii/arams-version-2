@@ -10,6 +10,7 @@ use App\Models\SubmissionRevision;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Services\Kpi\KpiProgressCalculator;
+use App\Services\Notification\NotificationService;
 use App\Services\Organisation\AffiliationResolver;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -30,6 +31,7 @@ class SubmissionService
         private readonly AffiliationResolver $affiliations,
         private readonly AuditLogger $audit,
         private readonly KpiProgressCalculator $kpi,
+        private readonly NotificationService $notifications,
     ) {}
 
     /** Create the workflow row for a newly created research record. */
@@ -102,6 +104,13 @@ class SubmissionService
                 ['revision' => $submission->current_revision, 'faculty_id' => $facultyId],
             );
 
+            // Goes to the faculty's serving TDPPs — the role that can actually
+            // act on it. ARAMS 1.0 notified every Admin and no TDPP, so the
+            // only role permitted to validate was the only one not told.
+            $this->notifications->submissionReceived(
+                $submission->load(['researchRecord.researchType', 'researchRecord.owner'])
+            );
+
             return $submission->refresh();
         });
     }
@@ -171,6 +180,12 @@ class SubmissionService
                 // Only approved records contribute — one definition, one place.
                 $this->kpi->recomputeForRecord($submission->researchRecord);
             }
+
+            $this->notifications->submissionDecided(
+                $submission->load('researchRecord'),
+                $decision->value,
+                $remarks,
+            );
 
             $this->audit->log(match ($decision) {
                 SubmissionStatus::Approved          => AuditLogger::APPROVED,

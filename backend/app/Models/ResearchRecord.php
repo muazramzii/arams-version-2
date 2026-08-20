@@ -122,19 +122,27 @@ class ResearchRecord extends Model
      */
     public function scopeDatePlaceable(Builder $query): Builder
     {
-        return $query->where('effective_date_precision', '!=', DatePrecision::Unknown->value)
-                     ->whereNotNull('effective_date');
+        // Columns are table-qualified throughout: analytics joins subtype
+        // tables, and `grants` also carries owner_staff_profile_id, so an
+        // unqualified name is ambiguous the moment a join appears.
+        return $query->where('research_records.effective_date_precision', '!=', DatePrecision::Unknown->value)
+                     ->whereNotNull('research_records.effective_date');
     }
 
     public function scopeInPeriod(Builder $query, KpiPeriod $period): Builder
     {
         return $query->datePlaceable()
-            ->whereBetween('effective_date', [$period->start_date, $period->end_date]);
+            ->whereBetween('research_records.effective_date', [$period->start_date, $period->end_date]);
     }
 
     public function scopeForFaculty(Builder $query, int $facultyId): Builder
     {
-        return $query->where('attributed_faculty_id', $facultyId);
+        return $query->where('research_records.attributed_faculty_id', $facultyId);
+    }
+
+    public function scopeOwnedBy(Builder $query, ?int $staffProfileId): Builder
+    {
+        return $query->where('research_records.owner_staff_profile_id', $staffProfileId ?? 0);
     }
 
     public function needsDateBackfill(): bool
