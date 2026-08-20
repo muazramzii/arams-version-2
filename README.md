@@ -10,7 +10,7 @@ A rebuild of ARAMS, the centralised platform that tracks lecturer research outpu
 
 ## Status
 
-Database and the core API are built and verified. **No UI exists yet.**
+Database, API and the core web application are built and verified end to end.
 
 | Phase | Scope | State |
 |---|---|---|
@@ -22,8 +22,9 @@ Database and the core API are built and verified. **No UI exists yet.**
 | 4b | Backend — research records, submissions, validation | ✅ Complete and verified |
 | 4c | Backend — KPI engine and endpoints | ✅ Complete and verified |
 | 4d | Backend — analytics, reports, notifications, audit | ✅ Complete (CSV reports; PDF/XLSX pending) |
-| 5 | Frontend — React portals for Lecturer, TDPP, Admin | Not started |
-| 6–8 | Integration, testing, hardening | Not started |
+| 5 | Frontend — React app for Lecturer, TDPP, Admin | ✅ Core complete and verified |
+| 6 | Integration — React ↔ API ↔ MySQL | ✅ Verified in the running app |
+| 7–8 | Full test coverage, accessibility, hardening | In progress |
 
 ## Documentation
 
@@ -60,6 +61,12 @@ Every figure in both documents was derived by querying the actual production dum
 │   ├── database/seeders/           reference data and initial data
 │   └── tests/Feature/              constraints · role boundaries · lifecycle
 │
+├── frontend/                       ARAMS 2.0 — React 19 + TypeScript + Vite
+│   ├── src/features/               auth · dashboard · research · submissions
+│   │                                validation · analytics · reports · audit
+│   ├── src/components/ui/          shared primitives, incl. the four async states
+│   └── src/lib/api.ts              typed client with the shared error envelope
+│
 ├── database/
 │   └── arams_uthm_schema.sql       ARAMS 1.0 structure only — no data
 │
@@ -89,7 +96,27 @@ by the database rather than by convention.
 | Check constraints | 25 |
 | Indexes | 232 |
 | API routes (`/api/v1`) | 44 |
-| Tests | 50 passing, 164 assertions |
+| Tests | 51 passing, 165 assertions |
+
+## Running the frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Vite proxies `/api` to `http://127.0.0.1:8000`, so run `php artisan serve` in
+`backend/` alongside it. For local accounts:
+
+```bash
+php artisan db:seed --class=DevelopmentSeeder
+```
+
+That creates a lecturer, a second lecturer, two TDPPs (one appointed to FSKTM,
+one to FKEE), and an admin, plus records in every workflow state. The seeder
+refuses to run in production and its password is printed to the console rather
+than into the UI — ARAMS 1.0 printed three working logins on its own login page.
 
 ### What the tests prove
 

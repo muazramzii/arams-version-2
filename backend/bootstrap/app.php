@@ -25,6 +25,16 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->throttleApi();
+
+        /**
+         * Returning null stops Laravel trying to redirect an unauthenticated
+         * API caller to a `login` route that does not exist in a headless
+         * backend. Without this, a request missing `Accept: application/json`
+         * gets a 500 ("Route [login] not defined") instead of a 401.
+         */
+        $middleware->redirectGuestsTo(
+            fn (Request $request) => $request->is('api/*') ? null : '/login'
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         /**

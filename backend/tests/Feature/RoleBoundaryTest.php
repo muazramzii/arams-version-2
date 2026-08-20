@@ -93,6 +93,16 @@ class RoleBoundaryTest extends TestCase
     }
 
     #[Test]
+    public function an_api_request_without_an_accept_header_still_gets_401_not_500(): void
+    {
+        // Laravel's default is to redirect a guest to a named `login` route,
+        // which does not exist in a headless backend — that produced a 500.
+        // Every other test here uses getJson, which sets the Accept header,
+        // so none of them caught it.
+        $this->call('GET', '/api/v1/submissions')->assertStatus(401);
+    }
+
+    #[Test]
     public function login_returns_a_token_and_never_echoes_the_role_the_client_asked_for(): void
     {
         $fsktm = Faculty::where('code', 'FSKTM')->first();
