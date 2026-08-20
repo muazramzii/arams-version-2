@@ -44,6 +44,25 @@ return [
             'transaction_mode' => 'DEFERRED',
         ],
 
+        /**
+         * Read-only source for the ARAMS 1.0 migration.
+         *
+         * Nothing in the application writes here. The migration command reads
+         * from it and writes to the default connection.
+         */
+        'legacy' => [
+            'driver'    => 'mysql',
+            'host'      => env('LEGACY_DB_HOST', '127.0.0.1'),
+            'port'      => env('LEGACY_DB_PORT', '3306'),
+            'database'  => env('LEGACY_DB_DATABASE', 'arams_uthm'),
+            'username'  => env('LEGACY_DB_USERNAME', 'root'),
+            'password'  => env('LEGACY_DB_PASSWORD', ''),
+            'charset'   => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'strict'    => false,
+            'engine'    => null,
+        ],
+
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
