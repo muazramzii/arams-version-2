@@ -17,9 +17,11 @@ const NAV: NavItem[] = [
   { to: "/", label: "Dashboard", roles: ["Lecturer", "TDPP", "Admin"] },
   { to: "/research", label: "My Research", roles: ["Lecturer", "TDPP", "Admin"] },
   { to: "/validation", label: "Validation Queue", roles: ["TDPP"], requiresAppointment: true },
+  { to: "/kpi", label: "KPI", roles: ["Lecturer", "TDPP"] },
   { to: "/analytics", label: "Analytics", roles: ["Lecturer", "TDPP", "Admin"] },
   { to: "/reports", label: "Reports", roles: ["Lecturer", "TDPP", "Admin"] },
   { to: "/audit", label: "Activity Log", roles: ["Lecturer", "TDPP", "Admin"] },
+  { to: "/admin", label: "Administration", roles: ["Admin"] },
 ];
 
 export function AppLayout() {
