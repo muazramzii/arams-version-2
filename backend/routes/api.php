@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AdminController;
 use App\Http\Controllers\Api\V1\AnalyticsController;
 use App\Http\Controllers\Api\V1\AuditController;
 use App\Http\Controllers\Api\V1\AuthController;
@@ -138,4 +139,29 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ── Audit ───────────────────────────────────────────────────────────
     Route::get('audit-events', [AuditController::class, 'index'])->name('audit.index');
+
+    /**
+     * ── Administration ──────────────────────────────────────────────────
+     *
+     * Appointing a TDPP is an Admin power, but it is NOT a validation power:
+     * D1 stands, and an Admin still cannot approve anything. What they can do
+     * is decide who validates — which is the only remedy when a faculty has
+     * nobody, as FKAAS currently does with 77 lecturers.
+     */
+    Route::middleware('role:Admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('faculties', [AdminController::class, 'faculties'])->name('faculties');
+        Route::post('faculties/{faculty}/leaders', [AdminController::class, 'appointLeader'])
+            ->name('faculties.appoint');
+        Route::delete('faculty-leaders/{facultyLeader}', [AdminController::class, 'endLeader'])
+            ->name('leaders.end');
+        Route::get('appointable-staff', [AdminController::class, 'appointableStaff'])
+            ->name('appointable-staff');
+
+        Route::get('users', [AdminController::class, 'users'])->name('users');
+        Route::put('users/{user}/activation', [AdminController::class, 'setUserActivation'])
+            ->name('users.activation');
+        Route::put('users/{user}/role', [AdminController::class, 'setUserRole'])->name('users.role');
+
+        Route::get('data-quality', [AdminController::class, 'dataQuality'])->name('data-quality');
+    });
 });

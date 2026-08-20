@@ -13,6 +13,8 @@ import { AnalyticsPage } from "./features/analytics/AnalyticsPage";
 import { ReportsPage } from "./features/reports/ReportsPage";
 import { AuditPage } from "./features/audit/AuditPage";
 import { NotificationsPage } from "./features/notifications/NotificationsPage";
+import { KpiPage } from "./features/kpi/KpiPage";
+import { AdminPage } from "./features/admin/AdminPage";
 import { LoadingState } from "./components/ui";
 import { ApiError } from "./lib/api";
 
@@ -79,7 +81,9 @@ export default function App() {
               <Route path="research" element={<ResearchListPage />} />
               <Route path="submissions/:id" element={<SubmissionDetailPage />} />
               <Route path="validation" element={<ValidationQueuePage />} />
+              <Route path="kpi" element={<KpiPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />
+              <Route path="admin" element={<AdminPage />} />
               <Route path="reports" element={<ReportsPage />} />
               <Route path="audit" element={<AuditPage />} />
               <Route path="notifications" element={<NotificationsPage />} />

@@ -64,7 +64,8 @@ Every figure in both documents was derived by querying the actual production dum
 │
 ├── frontend/                       ARAMS 2.0 — React 19 + TypeScript + Vite
 │   ├── src/features/               auth · dashboard · research · submissions
-│   │                                validation · analytics · reports · audit
+│   │                                validation · kpi · analytics · reports
+│   │                                audit · notifications · admin
 │   ├── src/components/ui/          shared primitives, incl. the four async states
 │   └── src/lib/api.ts              typed client with the shared error envelope
 │
@@ -96,8 +97,8 @@ by the database rather than by convention.
 | Unique constraints | 52 |
 | Check constraints | 25 |
 | Indexes | 232 |
-| API routes (`/api/v1`) | 44 |
-| Tests | 51 passing, 165 assertions |
+| API routes (`/api/v1`) | 52 |
+| Tests | 60 passing, 194 assertions |
 
 ## Running the frontend
 
@@ -135,6 +136,11 @@ that ARAMS 2.0 refuses it:
   resubmit → approve, with both decisions preserved; credit lands in the
   period of the publication year rather than the approval date (D4); progress
   falls again when a record is deleted.
+- **`AdminAppointmentTest`** — appointing a TDPP unblocks a faculty that
+  could not validate, *without* giving Admin any validation power; only a
+  TDPP-role holder can be appointed; ending the last appointment alerts Admin;
+  removing the TDPP role ends that person's appointments; deactivating a user
+  revokes their tokens; an Admin cannot demote or deactivate themselves.
 - **`AnalyticsReportingTest`** — analytics scope derived from the token, not
   the request; the breakdown dimension is whitelisted so no column name comes
   from the client; D5 benchmarks suppress the median until enough faculties
@@ -199,11 +205,11 @@ The schema accommodates both of these, so Phase 3 was not blocked. They block
 **committing** the ARAMS 1.0 migration, which the rehearsal has now quantified.
 
 1. **FKAAS has 77 lecturers and no TDPP appointment.** Under D1 their submissions
-   have no validator. The schema models TDPP as a dated appointment
-   (`faculty_leaders`), so faculties without one are queryable and raise a
-   coverage alert — no Admin fallback was introduced. The rehearsal confirms
-   FKAAS is the only faculty in this state. Needs an appointment before those
-   accounts are activated.
+   have no validator. The rehearsal confirms FKAAS is the only faculty in this
+   state. **The remedy now exists in the product**: Administration → Faculty
+   coverage flags it and appoints a TDPP, which is verified to unblock
+   submission without granting Admin any validation power. Still needs someone
+   named before those 77 accounts are activated.
 2. **88 records have no effective date** (70 of 71 grants, all 18 IP records).
    They migrate with `effective_date_precision = 'UNKNOWN'`: counted in totals,
    excluded from period-scoped KPI, surfaced on an Admin backfill worklist.
