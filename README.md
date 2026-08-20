@@ -24,6 +24,7 @@ Database, API and the core web application are built and verified end to end.
 | 4d | Backend — analytics, reports, notifications, audit | ✅ Complete (CSV reports; PDF/XLSX pending) |
 | 5 | Frontend — React app for Lecturer, TDPP, Admin | ✅ Core complete and verified |
 | 6 | Integration — React ↔ API ↔ MySQL | ✅ Verified in the running app |
+| — | ARAMS 1.0 data migration | ⚙️ Rehearsed against real data; awaiting two decisions |
 | 7–8 | Full test coverage, accessibility, hardening | In progress |
 
 ## Documentation
@@ -161,20 +162,53 @@ These were approved before Phase 2 and are not to be reopened without the projec
 
 Roles are exactly three: **Lecturer**, **TDPP**, **Admin**. TNCPI is not an application role.
 
+## Migrating ARAMS 1.0
+
+```bash
+php artisan arams:migrate-legacy              # rehearse, change nothing
+php artisan arams:migrate-legacy --commit     # write it
+```
+
+Reads from the `legacy` connection (`LEGACY_DB_*` in `.env`) and writes to the
+default one. It runs inside a transaction that is **rolled back unless
+`--commit`**, so a rehearsal exercises every insert and constraint for real and
+then leaves nothing behind.
+
+Latest rehearsal against the real UTHM data:
+
+| | |
+|---|---|
+| Records created from 278 parent rows | 257 |
+| Bundled submissions split (D3) | 67 |
+| Records with no effective date (D4) | 88 |
+| Approvals with no recorded approver | 134 |
+| Grant rows merged into shared projects | 12 |
+| Repeat claims by the same lecturer, dropped | 11 |
+| **Grant value that was triple-counted** | **RM 420,000** |
+| H-Index snapshots moved out of the workflow (D2) | 86 |
+| Shell accounts archived | 77 |
+| Faculty transfers replayed | 4 |
+
+Every normalisation decision is written to `legacy_value_map`, and each run is
+logged to `legacy_migration_runs`, so two rehearsals can be compared and the
+data cleaning is reviewable after the fact.
+
 ## Open questions
 
 The schema accommodates both of these, so Phase 3 was not blocked. They block
-the **data migration** from ARAMS 1.0, which is a separate reviewed step.
+**committing** the ARAMS 1.0 migration, which the rehearsal has now quantified.
 
 1. **FKAAS has 77 lecturers and no TDPP appointment.** Under D1 their submissions
    have no validator. The schema models TDPP as a dated appointment
    (`faculty_leaders`), so faculties without one are queryable and raise a
-   coverage alert — no Admin fallback was introduced. Needs an appointment
-   before those accounts are activated.
+   coverage alert — no Admin fallback was introduced. The rehearsal confirms
+   FKAAS is the only faculty in this state. Needs an appointment before those
+   accounts are activated.
 2. **88 records have no effective date** (70 of 71 grants, all 18 IP records).
    They migrate with `effective_date_precision = 'UNKNOWN'`: counted in totals,
    excluded from period-scoped KPI, surfaced on an Admin backfill worklist.
-   Needs an owner for the backfill.
+   The rehearsal confirms the count is exactly 88. Needs an owner for the
+   backfill.
 
 Three further questions — grant deduplication, the 77 inactive accounts, and the
 benchmark suppression threshold — shape the migration but not the schema. All
