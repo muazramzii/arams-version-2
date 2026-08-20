@@ -20,8 +20,8 @@ Database and the core API are built and verified. **No UI exists yet.**
 | 3 | Database implementation — migrations, models, seeders | ✅ Complete and verified |
 | 4a | Backend — auth, roles, policies, audit | ✅ Complete and verified |
 | 4b | Backend — research records, submissions, validation | ✅ Complete and verified |
-| 4c | Backend — KPI engine | ⚙️ Service done; endpoints pending |
-| 4d | Backend — analytics, reports, notifications | Not started |
+| 4c | Backend — KPI engine and endpoints | ✅ Complete and verified |
+| 4d | Backend — analytics, reports, notifications, audit | ✅ Complete (CSV reports; PDF/XLSX pending) |
 | 5 | Frontend — React portals for Lecturer, TDPP, Admin | Not started |
 | 6–8 | Integration, testing, hardening | Not started |
 
@@ -51,9 +51,11 @@ Every figure in both documents was derived by querying the actual production dum
 ├── backend/                        ARAMS 2.0 — Laravel 12 API
 │   ├── app/Models/                 34 Eloquent models + 19 reference models
 │   ├── app/Enums/                  11 backed enums
-│   ├── app/Http/Controllers/Api/V1 auth · research records · submissions
+│   ├── app/Http/Controllers/Api/V1 auth · research · submissions · KPI
+│   │                                analytics · reports · notifications · audit
 │   ├── app/Policies/               6 policies — where D1 is enforced
-│   ├── app/Services/               submission workflow · KPI · audit · attribution
+│   ├── app/Services/               workflow · KPI · analytics · reporting
+│   │                                notifications · audit · attribution
 │   ├── database/migrations/        15 migrations — 69 tables
 │   ├── database/seeders/           reference data and initial data
 │   └── tests/Feature/              constraints · role boundaries · lifecycle
@@ -86,8 +88,8 @@ by the database rather than by convention.
 | Unique constraints | 52 |
 | Check constraints | 25 |
 | Indexes | 232 |
-| API routes (`/api/v1`) | 21 |
-| Tests | 34 passing, 107 assertions |
+| API routes (`/api/v1`) | 44 |
+| Tests | 50 passing, 164 assertions |
 
 ### What the tests prove
 
@@ -105,6 +107,11 @@ that ARAMS 2.0 refuses it:
   resubmit → approve, with both decisions preserved; credit lands in the
   period of the publication year rather than the approval date (D4); progress
   falls again when a record is deleted.
+- **`AnalyticsReportingTest`** — analytics scope derived from the token, not
+  the request; the breakdown dimension is whitelisted so no column name comes
+  from the client; D5 benchmarks suppress the median until enough faculties
+  report; a new submission notifies the serving TDPP and *not* Admin; reports
+  are scoped at generation and bind that scope into the artifact.
 
 ## Database
 

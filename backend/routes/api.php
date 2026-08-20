@@ -1,6 +1,11 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AnalyticsController;
+use App\Http\Controllers\Api\V1\AuditController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\KpiController;
+use App\Http\Controllers\Api\V1\NotificationController;
+use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\ResearchRecordController;
 use App\Http\Controllers\Api\V1\SubmissionController;
 use Illuminate\Support\Facades\Route;
@@ -80,4 +85,57 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('submissions/{submission}/request-revision', [SubmissionController::class, 'requestRevision'])
             ->name('submissions.request-revision');
     });
+
+    // ── KPI ─────────────────────────────────────────────────────────────
+    Route::prefix('kpi')->name('kpi.')->group(function () {
+        Route::get('periods', [KpiController::class, 'periods'])->name('periods');
+        Route::get('measures', [KpiController::class, 'measures'])->name('measures');
+
+        Route::get('targets', [KpiController::class, 'targets'])->name('targets');
+        Route::post('targets', [KpiController::class, 'storeTarget'])
+            ->middleware('role:TDPP,Admin')->name('targets.store');
+
+        Route::get('assignments', [KpiController::class, 'assignments'])->name('assignments');
+        Route::post('assignments', [KpiController::class, 'assign'])
+            ->middleware('role:TDPP,Admin')->name('assignments.store');
+        Route::delete('assignments/{assignment}', [KpiController::class, 'unassign'])
+            ->middleware('role:TDPP,Admin')->name('assignments.destroy');
+
+        // Which records actually credited a target — progress you can audit.
+        Route::get('assignments/{assignment}/contributions', [KpiController::class, 'contributions'])
+            ->name('assignments.contributions');
+    });
+
+    // ── Analytics ───────────────────────────────────────────────────────
+    // Deliberately not /analytics/lecturer, /analytics/faculty etc.
+    // Scope is resolved from the token, so it cannot be requested wrongly.
+    Route::prefix('analytics')->name('analytics.')->group(function () {
+        Route::get('overview', [AnalyticsController::class, 'overview'])->name('overview');
+        Route::get('trends', [AnalyticsController::class, 'trends'])->name('trends');
+        Route::get('breakdown', [AnalyticsController::class, 'breakdown'])->name('breakdown');
+        Route::get('benchmark', [AnalyticsController::class, 'benchmark'])->name('benchmark');
+        Route::get('faculties', [AnalyticsController::class, 'faculties'])->name('faculties');
+    });
+
+    // ── Reports ─────────────────────────────────────────────────────────
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('definitions', [ReportController::class, 'definitions'])->name('definitions');
+        Route::get('runs', [ReportController::class, 'index'])->name('runs.index');
+        Route::post('runs', [ReportController::class, 'store'])
+            ->middleware('throttle:reports')->name('runs.store');
+        Route::get('runs/{reportRun}/download', [ReportController::class, 'download'])
+            ->name('runs.download');
+    });
+
+    // ── Notifications ───────────────────────────────────────────────────
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::post('read-all', [NotificationController::class, 'markAllRead'])->name('read-all');
+        Route::get('preferences', [NotificationController::class, 'preferences'])->name('preferences');
+        Route::put('preferences', [NotificationController::class, 'updatePreference'])->name('preferences.update');
+        Route::post('{id}/read', [NotificationController::class, 'markRead'])->name('read');
+    });
+
+    // ── Audit ───────────────────────────────────────────────────────────
+    Route::get('audit-events', [AuditController::class, 'index'])->name('audit.index');
 });
