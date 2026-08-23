@@ -136,6 +136,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('targets', [KpiController::class, 'storeTarget'])
             ->middleware('role:TDPP,Admin')->name('targets.store');
 
+        // Researchers this user may assign to, scoped from their appointment.
+        Route::get('assignable-staff', [KpiController::class, 'assignableStaff'])
+            ->middleware('role:TDPP,Admin')->name('assignable-staff');
+        Route::post('assign', [KpiController::class, 'assignToStaff'])
+            ->middleware('role:TDPP,Admin')->name('assign');
+
         Route::get('assignments', [KpiController::class, 'assignments'])->name('assignments');
         Route::post('assignments', [KpiController::class, 'assign'])
             ->middleware('role:TDPP,Admin')->name('assignments.store');

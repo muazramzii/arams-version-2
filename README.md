@@ -97,8 +97,8 @@ by the database rather than by convention.
 | Unique constraints | 52 |
 | Check constraints | 25 |
 | Indexes | 232 |
-| API routes (`/api/v1`) | 62 |
-| Tests | 81 passing, 292 assertions |
+| API routes (`/api/v1`) | 64 |
+| Tests | 90 passing, 321 assertions |
 
 ## Running the frontend
 
@@ -152,6 +152,11 @@ that ARAMS 2.0 refuses it:
   outside the web root under a generated name and served with an explicit
   Content-Type and `nosniff`; `staff_no` and faculty cannot be changed through
   the profile; and two researchers cannot claim the same ORCID.
+- **`KpiAssignmentTest`** — a TDPP sees and can assign to only their own
+  faculty; a TDPP with no appointment sees nobody; assigning a 2026 target
+  immediately credits work already published in 2026 but not 2025 (D4); a
+  Scopus criterion matches a paper indexed in both Scopus and WoS; and
+  reassigning the same measure updates the target instead of duplicating it.
 - **`AnalyticsReportingTest`** — analytics scope derived from the token, not
   the request; the breakdown dimension is whitelisted so no column name comes
   from the client; D5 benchmarks suppress the median until enough faculties

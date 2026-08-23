@@ -130,6 +130,59 @@ class KpiProgressCalculator
         return $detail && $column ? (float) ($detail->{$column} ?? 0) : 0.0;
     }
 
+    /**
+     * Scan existing approved work and credit whatever this target should
+     * already have counted, then recompute.
+     *
+     * Needed because recomputeForRecord only runs when a record is approved.
+     * A target created afterwards would otherwise start at zero and silently
+     * discard a lecturer's existing output for that period — which is not what
+     * D4 means. Assigning "3 papers in 2026" halfway through 2026 has to count
+     * the two already published.
+     *
+     * Idempotent: contributions are keyed on (target, assignment, record).
+     */
+    public function backfillTarget(KpiTarget $target): void
+    {
+        $target->loadMissing(['period', 'measure', 'criteria', 'assignments']);
+
+        if ($target->measure?->source_kind !== KpiSourceKind::ResearchRecord) {
+            $this->recomputeTarget($target);
+
+            return;
+        }
+
+        $records = ResearchRecord::query()
+            ->countable()
+            ->datePlaceable()
+            ->whereNull('research_records.deleted_at')
+            ->where('research_records.research_type_id', $target->measure->research_type_id)
+            ->whereBetween('research_records.effective_date', [
+                $target->period->start_date,
+                $target->period->end_date,
+            ])
+            ->when(
+                $target->scope_type->value === 'STAFF',
+                fn ($q) => $q->where('research_records.owner_staff_profile_id', $target->scope_id),
+            )
+            ->when(
+                $target->scope_type->value === 'FACULTY',
+                fn ($q) => $q->where('research_records.attributed_faculty_id', $target->scope_id),
+            )
+            ->with(['researchType', 'publication.indexings.indexing'])
+            ->get();
+
+        DB::transaction(function () use ($target, $records) {
+            foreach ($records as $record) {
+                if ($this->criteria->matches($target, $record)) {
+                    $this->credit($target, $record);
+                }
+            }
+
+            $this->recomputeTarget($target);
+        });
+    }
+
     /** Recompute a target's progress from its contributions. */
     public function recomputeTarget(KpiTarget $target): void
     {
