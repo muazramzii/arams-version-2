@@ -9,7 +9,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class KpiTarget extends Model
 {
-    protected $fillable = ['kpi_period_id', 'kpi_measure_id', 'scope_type', 'scope_id', 'target_value', 'description', 'created_by'];
+    // variant_code belongs here: without it, firstOrCreate silently drops the
+    // value, every target is written with NULL, and because MySQL treats NULLs
+    // in a unique index as distinct, the same target is created over and over.
+    protected $fillable = ['kpi_period_id', 'kpi_measure_id', 'scope_type', 'scope_id', 'variant_code', 'target_value', 'description', 'created_by'];
 
     protected function casts(): array
     {

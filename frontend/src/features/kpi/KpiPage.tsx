@@ -14,6 +14,7 @@ import {
 } from "../../components/ui";
 import { useAuth } from "../auth/AuthContext";
 import type { Envelope } from "../../types/api";
+import { AssignKpiPanel } from "./AssignKpiPanel";
 
 type Assignment = {
   id: number;
@@ -45,7 +46,7 @@ const STATUS: Record<Assignment["status"], { label: string; tone: "neutral" | "g
 };
 
 export function KpiPage() {
-  const { user } = useAuth();
+  const { user, can } = useAuth();
   const [expanded, setExpanded] = useState<number | null>(null);
 
   const assignments = useQuery({
@@ -151,6 +152,9 @@ export function KpiPage() {
       </Card>
 
       {expanded !== null && <ContributionsCard assignmentId={expanded} />}
+
+      {/* Assigning is a TDPP responsibility, and only with a live appointment. */}
+      {can.validate && <AssignKpiPanel />}
     </div>
   );
 }
