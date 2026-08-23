@@ -97,8 +97,8 @@ by the database rather than by convention.
 | Unique constraints | 52 |
 | Check constraints | 25 |
 | Indexes | 232 |
-| API routes (`/api/v1`) | 52 |
-| Tests | 60 passing, 194 assertions |
+| API routes (`/api/v1`) | 55 |
+| Tests | 70 passing, 251 assertions |
 
 ## Running the frontend
 
@@ -141,6 +141,11 @@ that ARAMS 2.0 refuses it:
   TDPP-role holder can be appointed; ending the last appointment alerts Admin;
   removing the TDPP role ends that person's appointments; deactivating a user
   revokes their tokens; an Admin cannot demote or deactivate themselves.
+- **`GrantParticipationTest`** — a grant code cannot be registered twice; two
+  lecturers share one project so its value is counted once; one lecturer cannot
+  claim the same grant twice; a grant with no start date is flagged before the
+  lecturer commits; and a database constraint violation never returns SQL, the
+  database name, or the host to the client.
 - **`AnalyticsReportingTest`** — analytics scope derived from the token, not
   the request; the breakdown dimension is whitelisted so no column name comes
   from the client; D5 benchmarks suppress the median until enough faculties
