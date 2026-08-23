@@ -130,6 +130,14 @@ class GrantProjectController extends Controller
                 ->orderBy('sort_order')->get(['id', 'code', 'label']),
             'award_levels' => DB::table('award_levels')->where('is_active', true)
                 ->orderBy('sort_order')->get(['id', 'code', 'label']),
+            // Used by the profile form. Adding a sixth identifier provider is
+            // a seeder change, not a schema change.
+            'external_id_providers' => DB::table('external_id_providers')->where('is_active', true)
+                ->orderBy('sort_order')->get(['id', 'code', 'label']),
+            'positions' => DB::table('positions')->where('is_active', true)
+                ->orderBy('sort_order')->get(['id', 'code', 'label']),
+            'researcher_statuses' => DB::table('researcher_statuses')->where('is_active', true)
+                ->orderBy('sort_order')->get(['id', 'code', 'label']),
         ]]);
     }
 }

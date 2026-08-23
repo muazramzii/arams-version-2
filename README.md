@@ -65,7 +65,7 @@ Every figure in both documents was derived by querying the actual production dum
 ├── frontend/                       ARAMS 2.0 — React 19 + TypeScript + Vite
 │   ├── src/features/               auth · dashboard · research · submissions
 │   │                                validation · kpi · analytics · reports
-│   │                                audit · notifications · admin
+│   │                                audit · notifications · admin · profile
 │   ├── src/components/ui/          shared primitives, incl. the four async states
 │   └── src/lib/api.ts              typed client with the shared error envelope
 │
@@ -97,8 +97,8 @@ by the database rather than by convention.
 | Unique constraints | 52 |
 | Check constraints | 25 |
 | Indexes | 232 |
-| API routes (`/api/v1`) | 55 |
-| Tests | 70 passing, 251 assertions |
+| API routes (`/api/v1`) | 62 |
+| Tests | 81 passing, 292 assertions |
 
 ## Running the frontend
 
@@ -146,6 +146,12 @@ that ARAMS 2.0 refuses it:
   claim the same grant twice; a grant with no start date is flagged before the
   lecturer commits; and a database constraint violation never returns SQL, the
   database name, or the host to the client.
+- **`ProfileUploadTest`** — the ARAMS 1.0 remote-code-execution payload
+  (`shell.php` sent as `image/jpeg`) is refused, along with `.phtml`, `.svg`,
+  `.html`, and the `shell.jpg.php` double extension; a real image is stored
+  outside the web root under a generated name and served with an explicit
+  Content-Type and `nosniff`; `staff_no` and faculty cannot be changed through
+  the profile; and two researchers cannot claim the same ORCID.
 - **`AnalyticsReportingTest`** — analytics scope derived from the token, not
   the request; the breakdown dimension is whitelisted so no column name comes
   from the client; D5 benchmarks suppress the median until enough faculties
@@ -224,6 +230,28 @@ The schema accommodates both of these, so Phase 3 was not blocked. They block
 Three further questions — grant deduplication, the 77 inactive accounts, and the
 benchmark suppression threshold — shape the migration but not the schema. All
 five are detailed at the end of the Phase 2 document.
+
+## Upload handling
+
+Profile photos are the one place ARAMS 2.0 accepts a file, and ARAMS 1.0's
+handling of them was the worst defect in the audit — it took the extension
+from the uploaded filename, trusted the client's `Content-Type`, and wrote the
+result into a directory Apache served.
+
+Four defences replace that:
+
+1. The extension is whitelisted, never read from the filename.
+2. The real MIME type is read from the file's own bytes and must match.
+3. `getimagesize()` must parse it as an image of sane dimensions.
+4. It is stored on the private disk under a generated name, outside the web
+   root, and served back through a controller with a fixed `Content-Type` and
+   `X-Content-Type-Options: nosniff`.
+
+**Known residual:** this machine has no `ext-gd`, so uploads are not
+re-encoded. A polyglot — a valid image carrying an embedded payload — could
+still be stored. It cannot execute, because nothing interprets it and it never
+sits in a served directory. Installing `ext-gd` and re-encoding on upload would
+close that last gap.
 
 ## Security notice for ARAMS 1.0
 
