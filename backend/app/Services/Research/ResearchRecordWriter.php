@@ -85,6 +85,25 @@ class ResearchRecordWriter
 
     public function create(ResearchType $type, StaffProfile $owner, array $data): ResearchRecord
     {
+        /**
+         * Caught here rather than left to the unique index, so the lecturer
+         * gets a sentence they can act on instead of a generic conflict. The
+         * index is still the guarantee; this is only the better message.
+         */
+        if ($type->code === 'GRANT') {
+            $alreadyClaimed = DB::table('grants')
+                ->where('grant_project_id', $data['grant_project_id'])
+                ->where('owner_staff_profile_id', $owner->id)
+                ->exists();
+
+            if ($alreadyClaimed) {
+                throw new \RuntimeException(
+                    'You have already recorded your participation in this grant. '
+                    . 'Edit the existing record instead of adding a second one.'
+                );
+            }
+        }
+
         return DB::transaction(function () use ($type, $owner, $data) {
             [$effectiveDate, $precision] = $this->effectiveDate($type->code, $data);
 

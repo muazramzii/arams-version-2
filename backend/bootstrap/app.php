@@ -4,6 +4,8 @@ use App\Http\Middleware\EnsureRole;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -74,8 +76,32 @@ return Application::configure(basePath: dirname(__DIR__))
                     $e->getMessage() ?: 'The request could not be completed.',
                     null,
                 ],
+                /**
+                 * Database errors must be caught before the RuntimeException
+                 * arm: QueryException extends PDOException extends
+                 * RuntimeException, so without these two cases a constraint
+                 * violation was returned to the client with the full SQL
+                 * statement, database name, host and port in `detail`.
+                 *
+                 * That is the same internal disclosure ARAMS 1.0 shipped, and
+                 * it survived here because the tests asserted status codes
+                 * without ever reading the body.
+                 */
+                $e instanceof UniqueConstraintViolationException => [
+                    409,
+                    'Conflict',
+                    'That would duplicate a record that already exists.',
+                    null,
+                ],
+                $e instanceof QueryException => [
+                    500,
+                    'Server error',
+                    config('app.debug') ? $e->getMessage() : 'A database error occurred.',
+                    null,
+                ],
                 $e instanceof RuntimeException => [
-                    // Domain and workflow refusals — safe, intentional messages.
+                    // Domain and workflow refusals — safe, intentional messages
+                    // written for the reader, never raw exception text.
                     422, 'Action not allowed', $e->getMessage(), null,
                 ],
                 default => [

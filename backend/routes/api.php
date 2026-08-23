@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\AdminController;
 use App\Http\Controllers\Api\V1\AnalyticsController;
 use App\Http\Controllers\Api\V1\AuditController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\GrantProjectController;
 use App\Http\Controllers\Api\V1\KpiController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ReportController;
@@ -45,6 +46,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('research-records/{id}/restore', [ResearchRecordController::class, 'restore'])
         ->whereNumber('id')
         ->name('research-records.restore');
+
+    /**
+     * ── Grant projects ──────────────────────────────────────────────────
+     *
+     * The shared institutional object. A lecturer searches for the code
+     * before claiming participation, so two people on one grant attach to
+     * one project instead of creating two — the defect that duplicated
+     * eleven codes and RM 420,000 in ARAMS 1.0.
+     */
+    Route::get('reference-data', [GrantProjectController::class, 'references'])
+        ->name('reference-data');
+    Route::get('grant-projects', [GrantProjectController::class, 'index'])
+        ->name('grant-projects.index');
+    Route::post('grant-projects', [GrantProjectController::class, 'store'])
+        ->name('grant-projects.store');
 
     // ── Submissions and validation ──────────────────────────────────────
     Route::get('submissions', [SubmissionController::class, 'index'])->name('submissions.index');
