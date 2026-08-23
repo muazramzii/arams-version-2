@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\GrantProjectController;
 use App\Http\Controllers\Api\V1\KpiController;
 use App\Http\Controllers\Api\V1\NotificationController;
+use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\ResearchRecordController;
 use App\Http\Controllers\Api\V1\SubmissionController;
@@ -38,6 +39,29 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
+
+    /**
+     * ── Own profile ─────────────────────────────────────────────────────
+     *
+     * Everything here acts on the caller's own profile; there is no id in the
+     * path to tamper with. staff_no and faculty are absent by design — both
+     * are institutional facts, and changing faculty is an audited Admin action
+     * that writes affiliation history.
+     */
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [ProfileController::class, 'show'])->name('show');
+        Route::put('/', [ProfileController::class, 'update'])->name('update');
+        Route::put('external-ids', [ProfileController::class, 'updateExternalIds'])
+            ->name('external-ids');
+        Route::post('photo', [ProfileController::class, 'uploadPhoto'])->name('photo.upload');
+        Route::delete('photo', [ProfileController::class, 'deletePhoto'])->name('photo.delete');
+        Route::get('photo', [ProfileController::class, 'photo'])->name('photo.own');
+    });
+
+    // Photos are served through PHP, never from a web-served directory.
+    Route::get('staff/{staffProfileId}/photo', [ProfileController::class, 'photo'])
+        ->whereNumber('staffProfileId')
+        ->name('staff.photo');
 
     // ── Research records ────────────────────────────────────────────────
     Route::apiResource('research-records', ResearchRecordController::class)

@@ -15,6 +15,7 @@ import { AuditPage } from "./features/audit/AuditPage";
 import { NotificationsPage } from "./features/notifications/NotificationsPage";
 import { KpiPage } from "./features/kpi/KpiPage";
 import { AdminPage } from "./features/admin/AdminPage";
+import { ProfilePage } from "./features/profile/ProfilePage";
 import { LoadingState } from "./components/ui";
 import { ApiError } from "./lib/api";
 
@@ -78,6 +79,7 @@ export default function App() {
               }
             >
               <Route index element={<DashboardPage />} />
+              <Route path="profile" element={<ProfilePage />} />
               <Route path="research" element={<ResearchListPage />} />
               <Route path="submissions/:id" element={<SubmissionDetailPage />} />
               <Route path="validation" element={<ValidationQueuePage />} />

@@ -16,6 +16,7 @@ type NavItem = { to: string; label: string; roles: Role[]; requiresAppointment?:
 const NAV: NavItem[] = [
   { to: "/", label: "Dashboard", roles: ["Lecturer", "TDPP", "Admin"] },
   { to: "/research", label: "My Research", roles: ["Lecturer", "TDPP", "Admin"] },
+  { to: "/profile", label: "My Profile", roles: ["Lecturer", "TDPP", "Admin"] },
   { to: "/validation", label: "Validation Queue", roles: ["TDPP"], requiresAppointment: true },
   { to: "/kpi", label: "KPI", roles: ["Lecturer", "TDPP"] },
   { to: "/analytics", label: "Analytics", roles: ["Lecturer", "TDPP", "Admin"] },
