@@ -1,0 +1,88 @@
+name: CI
+
+# Every push and every pull request. The 90 backend tests are the only thing
+# that has ever caught a regression in this project; until now they ran only
+# when someone remembered to run them.
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend tests
+    runs-on: ubuntu-latest
+
+    # MariaDB 10.4 to match the UTHM server. The version matters: the schema
+    # relies on strict mode, and 10.4 lacks RENAME INDEX, which shaped how the
+    # KPI target migrations were written.
+    services:
+      mariadb:
+        image: mariadb:10.4
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_DATABASE: arams2_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo, pdo_mysql, bcmath, fileinfo, intl, zip
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Prepare the environment file
+        run: cp .env.example .env
+
+      - name: Generate the application key
+        run: php artisan key:generate
+
+      # phpunit.xml pins DB_CONNECTION=mysql and DB_DATABASE=arams2_test, and
+      # leaves host, user and password to the framework defaults — 127.0.0.1,
+      # root, empty — which is what the service container above provides.
+      # Test classes carry RefreshDatabase and $seed, so migrations and seeders
+      # run themselves.
+      - name: Run the Laravel test suite
+        run: php artisan test
+
+  frontend:
+    name: Frontend build
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      # `npm run build` is `tsc -b && vite build`. Building is a stricter gate
+      # than type-checking alone: erasableSyntaxOnly has already rejected code
+      # here that `tsc --noEmit` accepted.
+      - name: Build the frontend
+        run: npm run build
