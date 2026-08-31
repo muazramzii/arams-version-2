@@ -52,8 +52,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: composer-${{ hashFiles('backend/composer.lock') }}
-          restore-keys: composer-
+          key: ${{ runner.os }}-composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
 
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
