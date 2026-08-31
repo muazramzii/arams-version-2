@@ -123,3 +123,16 @@ jobs:
 
       - name: Scan for committed secrets
         uses: gitleaks/gitleaks-action@v2
+
+      # gitleaks looks for credential-shaped strings; a plain data dump has
+      # none. database/arams_uthm_schema.sql is the one file .gitignore
+      # deliberately negates — everything else matching *.sql, including
+      # arams_uthm.sql itself, must never be tracked.
+      - name: Guard against a committed data dump
+        run: |
+          offenders=$(git ls-files -- '*.sql' | grep -v '^database/arams_uthm_schema.sql$' || true)
+          if [ -n "$offenders" ]; then
+            echo "::error::Tracked .sql file(s) other than the schema-only file are not allowed:"
+            echo "$offenders"
+            exit 1
+          fi
