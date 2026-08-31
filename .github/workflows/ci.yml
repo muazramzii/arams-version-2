@@ -97,6 +97,12 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
+      # oxlint. Laravel Pint (backend style) is intentionally not gated yet —
+      # see issue #4 — because it fails on pre-existing files unrelated to
+      # any single change.
+      - name: Lint the frontend
+        run: npm run lint
+
       # `npm run build` is `tsc -b && vite build`. Building is a stricter gate
       # than type-checking alone: erasableSyntaxOnly has already rejected code
       # here that `tsc --noEmit` accepted.
