@@ -108,3 +108,18 @@ jobs:
       # here that `tsc --noEmit` accepted.
       - name: Build the frontend
         run: npm run build
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+        with:
+          # gitleaks needs full history to scan a push to main; a PR is
+          # scanned as a diff against its base regardless.
+          fetch-depth: 0
+
+      - name: Scan for committed secrets
+        uses: gitleaks/gitleaks-action@v2
