@@ -44,6 +44,9 @@ jobs:
           extensions: mbstring, pdo, pdo_mysql, bcmath, fileinfo, intl, zip
           coverage: none
 
+      # setup-php has no built-in dependency cache (unlike setup-node's
+      # `cache: npm` below), so Composer's cache directory is resolved and
+      # cached explicitly.
       - name: Resolve the Composer cache directory
         id: composer-cache
         run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
