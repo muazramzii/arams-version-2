@@ -4,7 +4,7 @@
 //  Provides: aramsSendMail()  and  aramsSendOtp()
 // ============================================================
 
-require_once __DIR__ . '/../config/mail.php';
+require_once __DIR__ . '/../config/mail_config.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
@@ -15,25 +15,36 @@ require_once __DIR__ . '/../lib/PHPMailer/PHPMailer.php';
 require_once __DIR__ . '/../lib/PHPMailer/SMTP.php';
 
 /**
- * Send an HTML email via Gmail SMTP.
+ * Send an HTML email via SMTP, using settings from the environment
+ * (see config/mail_config.php).
  * Returns ['success'=>true] or ['success'=>false, 'error'=>'...'].
+ *
+ * When mail is not configured nothing is attempted and a plain failure is
+ * returned. The 'error' text is deliberately generic: SMTP detail goes to the
+ * server log, never back to the caller or the page.
  */
 function aramsSendMail(string $to, string $subject, string $htmlBody, string $altBody = '', array $embeds = []): array
 {
+    $cfg = aramsMailConfig();
+    if ($cfg === null) {
+        error_log('ARAMS mail: not configured (set ARAMS_MAIL_USERNAME and ARAMS_MAIL_PASSWORD); message not sent');
+        return ['success' => false, 'error' => 'Mail is not configured on this server.'];
+    }
+
     $mail = new PHPMailer(true);
     try {
         $mail->isSMTP();
-        $mail->Host       = MAIL_HOST;
+        $mail->Host       = $cfg['host'];
         $mail->SMTPAuth   = true;
-        $mail->Username   = MAIL_USERNAME;
-        $mail->Password   = MAIL_PASSWORD;
-        $mail->SMTPSecure = MAIL_SECURE;          // 'tls' or 'ssl'
-        $mail->Port       = MAIL_PORT;
+        $mail->Username   = $cfg['username'];
+        $mail->Password   = $cfg['password'];
+        $mail->SMTPSecure = $cfg['secure'];       // 'tls' or 'ssl'
+        $mail->Port       = $cfg['port'];
         $mail->CharSet    = 'UTF-8';
-        $mail->SMTPDebug  = (int) MAIL_DEBUG;
+        $mail->SMTPDebug  = 0;                    // never echo the SMTP conversation into a page
 
         // Localhost-only workaround for self-signed / unverifiable TLS certs.
-        if (MAIL_ALLOW_INSECURE) {
+        if ($cfg['allow_insecure']) {
             $mail->SMTPOptions = ['ssl' => [
                 'verify_peer'       => false,
                 'verify_peer_name'  => false,
@@ -41,7 +52,7 @@ function aramsSendMail(string $to, string $subject, string $htmlBody, string $al
             ]];
         }
 
-        $mail->setFrom(MAIL_FROM, MAIL_FROM_NAME);
+        $mail->setFrom($cfg['from'], $cfg['from_name']);
         $mail->addAddress($to);
 
         // Inline (embedded) images referenced in the HTML via cid:<id>
@@ -59,7 +70,8 @@ function aramsSendMail(string $to, string $subject, string $htmlBody, string $al
         $mail->send();
         return ['success' => true];
     } catch (Exception $e) {
-        return ['success' => false, 'error' => $mail->ErrorInfo];
+        error_log('ARAMS mail: send failed: ' . $mail->ErrorInfo);
+        return ['success' => false, 'error' => 'The email could not be sent.'];
     }
 }
 
