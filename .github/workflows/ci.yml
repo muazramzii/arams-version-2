@@ -150,16 +150,24 @@ jobs:
           GITLEAKS_ENABLE_COMMENTS: 'false'
           GITLEAKS_ENABLE_UPLOAD_ARTIFACT: 'false'
 
-      # gitleaks looks for credential-shaped strings; a plain data dump has
-      # none. database/arams_uthm_schema.sql is the one file .gitignore
-      # deliberately negates — everything else matching *.sql, including
-      # arams_uthm.sql itself, must never be tracked.
-      - name: Guard against a committed data dump
+      # gitleaks looks for credential-shaped strings. It cannot see a plain data
+      # dump, a database file, an .env full of weak values, or a key file it does
+      # not recognise, and .gitignore is bypassed by `git add -f`. So the policy
+      # is enforced on the tracked file list itself. Only file NAMES are printed,
+      # never contents.
+      #
+      # Allowed on purpose: database/arams_uthm_schema.sql (schema only, no data),
+      # *.env.example files (placeholders), and backend/config/mail.php (the
+      # Laravel config, which reads the environment and holds no secret).
+      - name: Guard against committed data dumps, environment files and keys
         run: |
-          offenders=$(git ls-files -- '*.sql' | grep -v '^database/arams_uthm_schema.sql$' || true)
+          allowed='^(database/arams_uthm_schema\.sql|(.*/)?\.env\.example)$'
+          forbidden='(\.sql$|\.sql\.[A-Za-z0-9]+$|\.dump$|\.bak$|\.sqlite3?$|\.db$|(^|/)\.env(\..+)?$|\.pem$|\.p12$|\.pfx$|(^|/)id_(rsa|dsa|ecdsa|ed25519)$|^arams-main/config/mail\.php$)'
+          offenders=$(git ls-files | grep -E "$forbidden" | grep -Ev "$allowed" || true)
           if [ -n "$offenders" ]; then
-            echo "::error::Tracked .sql file(s) other than the schema-only file are not allowed:"
+            echo "::error::Tracked file(s) that must never be committed (data dumps, databases, .env files, key material, legacy mail credentials):"
             echo "$offenders"
+            echo "Remove them from git (git rm --cached) and rotate anything they contained."
             exit 1
           fi
 
