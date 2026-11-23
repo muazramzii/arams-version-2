@@ -108,6 +108,10 @@ jobs:
       - name: Lint the frontend
         run: npm run lint
 
+      # Vitest + React Testing Library. First coverage: role-based navigation.
+      - name: Test the frontend
+        run: npm test
+
       # `npm run build` is `tsc -b && vite build`. Building is a stricter gate
       # than type-checking alone: erasableSyntaxOnly has already rejected code
       # here that `tsc --noEmit` accepted.
