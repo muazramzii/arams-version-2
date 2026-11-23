@@ -30,7 +30,8 @@ config/database.local.php
 *.sql.bak
 *.dump
 
-# Secrets — SMTP App Password (use config/mail.example.php as template)
+# Legacy SMTP credential file. The mailer no longer reads it (settings come from the
+# environment, see config/mail_config.php); kept ignored so an old copy cannot be committed.
 config/mail.php
 
 # One-off / temporary scripts

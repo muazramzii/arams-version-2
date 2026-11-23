@@ -72,6 +72,12 @@ jobs:
       - name: Generate the application key
         run: php artisan key:generate
 
+      # ARAMS 1.0's mailer must keep failing safely when unconfigured, keep
+      # secure defaults, and never go back to loading a credential file.
+      # Standalone PHP: no database, no network.
+      - name: Test the legacy mail configuration
+        run: php ../arams-main/tests/test_mail_config.php
+
       # phpunit.xml pins DB_CONNECTION=mysql and DB_DATABASE=arams2_test, and
       # leaves host, user and password to the framework defaults — 127.0.0.1,
       # root, empty — which is what the service container above provides.
