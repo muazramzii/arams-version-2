@@ -113,16 +113,33 @@ jobs:
     name: Secret scan
     runs-on: ubuntu-latest
 
+    # Only what the scan needs: read the code, read the PR's commit list.
+    permissions:
+      contents: read
+      pull-requests: read
+
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
         with:
-          # gitleaks needs full history to scan a push to main; a PR is
-          # scanned as a diff against its base regardless.
+          # Full history so a push is scanned commit by commit.
           fetch-depth: 0
 
+      # On pull_request events gitleaks-action refuses to run without a
+      # GITHUB_TOKEN (it lists the PR's commits through the API), so this job
+      # failed on every PR while still passing on push. The token is the
+      # automatic per-run one, scoped by the permissions block above.
+      #
+      # Comments and artifact upload are switched off on purpose: this is a
+      # public repository, and an uploaded findings report would be readable
+      # by anyone. If a real secret is ever detected, the log names the file
+      # and line (the action redacts the value) and nothing else is published.
       - name: Scan for committed secrets
         uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: 'false'
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: 'false'
 
       # gitleaks looks for credential-shaped strings; a plain data dump has
       # none. database/arams_uthm_schema.sql is the one file .gitignore
