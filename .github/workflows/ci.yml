@@ -195,6 +195,8 @@ jobs:
       DB_DATABASE: arams2_test
       DB_USERNAME: root
       DB_PASSWORD: ''
+      FINGERPRINT_PHP: |
+        $d=DB::getDatabaseName(); $t=Schema::getTableListing($d, false); sort($t); $s=[]; foreach ($t as $n) { foreach (Schema::getColumns($n) as $c) { $s[]=$n.".".$c["name"].":".$c["type"]; } } sort($s); echo count($t)." tables ".count($s)." columns ".md5(implode("\n",$s));
 
     steps:
       - name: Check out the repository
@@ -228,14 +230,43 @@ jobs:
       - name: Generate the application key
         run: php artisan key:generate
 
-      # Proves the schema can be torn all the way down and rebuilt, not
-      # just applied once and left standing. A migration that can't roll
-      # back cleanly would otherwise only surface during a real incident.
+      # Exit codes alone prove little: a down() that does nothing still exits 0.
+      # So each phase also inspects the database. The fingerprint covers every
+      # table.column:type in the current database, scoped on purpose because
+      # Schema::getTableListing() otherwise lists every database on the server.
       - name: Migrate from empty
         run: php artisan migrate:fresh --force
+
+      - name: Verify the schema that was built
+        run: |
+          for table in users faculties research_records submissions submission_reviews kpi_targets audit_events; do
+            php artisan tinker --execute="echo Schema::hasTable('$table') ? 'yes' : 'no';" | tr -d '\r' | grep -qx yes \
+              || { echo "::error::Expected table '$table' is missing after migrate:fresh"; exit 1; }
+          done
+          php artisan tinker --execute="$FINGERPRINT_PHP" | tr -d '\r' | tee "$RUNNER_TEMP/schema-first.txt"
 
       - name: Roll back every migration
         run: php artisan migrate:rollback --force
 
+      - name: Verify the rollback left nothing behind
+        run: |
+          remaining=$(php artisan tinker --execute='echo implode(",", Schema::getTableListing(DB::getDatabaseName(), false));' | tr -d '\r')
+          echo "tables remaining after rollback: $remaining"
+          if [ "$remaining" != "migrations" ]; then
+            echo "::error::Rollback left tables behind (only 'migrations' should remain): $remaining"
+            exit 1
+          fi
+
       - name: Migrate again
         run: php artisan migrate:fresh --force
+
+      - name: Verify the rebuilt schema matches the first build
+        run: |
+          first=$(cat "$RUNNER_TEMP/schema-first.txt")
+          second=$(php artisan tinker --execute="$FINGERPRINT_PHP" | tr -d '\r')
+          echo "first : $first"
+          echo "second: $second"
+          if [ -z "$first" ] || [ "$first" != "$second" ]; then
+            echo "::error::Schema after rollback and re-migration differs from the first build"
+            exit 1
+          fi
