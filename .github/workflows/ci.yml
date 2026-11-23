@@ -7,6 +7,11 @@ on:
   push:
   pull_request:
 
+# Least privilege by default: every job here only needs to read the code. A job
+# that needs more (none does today) must ask for it explicitly.
+permissions:
+  contents: read
+
 jobs:
   backend:
     name: Backend tests
